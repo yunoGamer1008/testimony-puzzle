@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="g1" cx="20%" cy="0%" r="60%">
+      <stop offset="0%" stop-color="#c9a44a" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#06090f" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="g2" cx="80%" cy="100%" r="60%">
+      <stop offset="0%" stop-color="#4a82c4" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#06090f" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#06090f"/>
+  <rect width="1200" height="630" fill="url(#g1)"/>
+  <rect width="1200" height="630" fill="url(#g2)"/>
+  <!-- Case badge -->
+  <rect x="476" y="158" width="248" height="34" rx="2" fill="none" stroke="#c9a44a" stroke-opacity="0.28" stroke-width="1"/>
+  <text x="600" y="182" text-anchor="middle" font-family="Georgia, serif" font-size="13" fill="#c9a44a" fill-opacity="0.55" letter-spacing="10">CASE FILE</text>
+  <!-- Title -->
+  <text x="600" y="300" text-anchor="middle" font-family="Georgia, serif" font-size="88" font-weight="700" fill="#c9a44a" letter-spacing="10">証言パズル</text>
+  <!-- Ornament line -->
+  <line x1="340" y1="338" x2="576" y2="338" stroke="#c9a44a" stroke-opacity="0.22" stroke-width="1"/>
+  <polygon points="600,328 610,338 600,348 590,338" fill="#c9a44a" fill-opacity="0.45"/>
+  <line x1="624" y1="338" x2="860" y2="338" stroke="#c9a44a" stroke-opacity="0.22" stroke-width="1"/>
+  <!-- Tagline -->
+  <text x="600" y="400" text-anchor="middle" font-family="Georgia, serif" font-size="26" fill="#7a90aa" letter-spacing="4">証言を読み解き、犯人を暴け</text>
+  <!-- Stars -->
+  <text x="600" y="470" text-anchor="middle" font-size="18" fill="#c9a44a" fill-opacity="0.3" letter-spacing="16">★ ★ ★</text>
+</svg>
