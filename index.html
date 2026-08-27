@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>証言パズル</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Crimson+Pro:ital,wght@0,400;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      #06090f;
+      --s1:      #0c1220;
+      --s2:      #111a2c;
+      --s3:      #182035;
+      --border:  #1c2a40;
+      --border2: #253650;
+      --gold:    #c9a44a;
+      --gold-l:  #e0bf70;
+      --gold-bg: rgba(201,164,74,.08);
+      --red:     #b84545;
+      --red-l:   #e06060;
+      --red-bg:  rgba(184,69,69,.10);
+      --green:   #3a9b70;
+      --green-bg:rgba(58,155,112,.10);
+      --text:    #ddd8ce;
+      --text2:   #7a90aa;
+      --text3:   #3e5068;
+      --r:       10px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.65;background-image:radial-gradient(ellipse at 20% 0%,rgba(201,164,74,.05) 0%,transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(74,130,196,.05) 0%,transparent 60%),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='1' fill='%23ffffff' fill-opacity='0.035'/%3E%3C/svg%3E")}
+
+    /* Layout */
+    .wrap{max-width:860px;margin:0 auto;padding:32px 20px 80px}
+
+    /* Header */
+    header{text-align:center;margin-bottom:40px;position:relative}
+    header h1{font-family:'Cinzel',Georgia,serif;font-size:2.2rem;font-weight:700;color:var(--gold);letter-spacing:.08em;margin-bottom:6px}
+    header p{font-size:.85rem;color:var(--text2);letter-spacing:.04em}
+    .lang-btn{position:fixed;top:18px;right:20px;z-index:100;background:var(--s2);border:1px solid var(--border2);border-radius:6px;padding:6px 14px;color:var(--text2);font-size:.8rem;font-weight:600;cursor:pointer;letter-spacing:.06em;transition:all .2s;font-family:inherit}
+    .lang-btn:hover{border-color:var(--gold);color:var(--gold)}
+
+    /* Step indicator */
+    .steps{display:flex;align-items:flex-start;margin-bottom:36px}
+    .step-item{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1}
+    .step-circle{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:600;border:1.5px solid var(--border2);color:var(--text3);cursor:pointer;transition:all .25s;background:var(--s2);position:relative;z-index:1}
+    .step-item.active .step-circle{background:var(--gold);border-color:var(--gold);color:#000}
+    .step-item.done .step-circle{background:var(--green);border-color:var(--green);color:#fff}
+    .step-item:hover:not(.active) .step-circle{border-color:var(--gold);color:var(--gold)}
+    .step-label{font-size:.72rem;color:var(--text3);white-space:nowrap}
+    .step-item.active .step-label{color:var(--gold)}
+    .step-item.done .step-label{color:var(--green)}
+    .step-conn{flex:1;height:1.5px;background:var(--border2);margin-top:19px;margin-bottom:auto}
+
+    /* Card */
+    .card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:28px;margin-bottom:16px;box-shadow:0 6px 32px rgba(0,0,0,.35)}
+    .card-title{font-family:'Cinzel',Georgia,serif;font-size:.9rem;font-weight:500;color:var(--gold);letter-spacing:.06em;text-transform:uppercase;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+    .section-label{font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin:24px 0 12px;display:flex;align-items:center;gap:10px}
+    .section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+    .section-label:first-child{margin-top:0}
+
+    /* Table */
+    .tbl-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border)}
+    table{width:100%;border-collapse:collapse;font-size:.88rem}
+    thead tr{background:var(--s2)}
+    th{padding:10px 14px;text-align:left;font-size:.75rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);white-space:nowrap}
+    td{padding:10px 14px;border-top:1px solid var(--border)}
+    tbody tr:hover td{background:var(--s2)}
+
+    /* Form */
+    input[type=text],input[type=number],select{background:var(--s3);border:1px solid var(--border2);border-radius:6px;padding:7px 11px;color:var(--text);font-size:.88rem;font-family:inherit;outline:none;transition:border-color .2s,box-shadow .2s;min-width:0}
+    input[type=text]:focus,input[type=number]:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(201,164,74,.15)}
+    select{cursor:pointer}
+    input[type=text]::placeholder{color:var(--text3)}
+    .t-row input[type=text]{flex:1;min-width:160px}
+
+    /* Buttons */
+    .btn{padding:8px 18px;border-radius:7px;border:none;cursor:pointer;font-size:.88rem;font-weight:500;font-family:inherit;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+    .btn-gold{background:var(--gold);color:#0a0a00;font-weight:600}
+    .btn-gold:hover{background:var(--gold-l)}
+    .btn-gold:disabled{opacity:.4;cursor:not-allowed}
+    .btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+    .btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+    .btn-danger{background:transparent;border:1px solid var(--border);color:var(--red-l);font-size:.8rem;padding:4px 10px}
+    .btn-danger:hover{border-color:var(--red);background:var(--red-bg)}
+    .btn-ghost{background:transparent;border:1px dashed var(--border2);color:var(--text3);font-size:.82rem;padding:6px 14px}
+    .btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+
+    /* Toggle */
+    .toggle{display:flex;border-radius:6px;overflow:hidden;border:1px solid var(--border2)}
+    .tgl{padding:5px 13px;border:none;cursor:pointer;font-size:.78rem;font-weight:500;background:transparent;color:var(--text3);transition:all .2s;font-family:inherit}
+    .tgl.honest.on{background:var(--green);color:#fff}
+    .tgl.liar.on{background:var(--red);color:#fff}
+
+    /* Badges */
+    .badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:.7rem;font-weight:600;letter-spacing:.04em}
+    .badge-criminal{background:rgba(201,164,74,.15);color:var(--gold);border:1px solid rgba(201,164,74,.3)}
+    .badge-liar{background:var(--red-bg);color:var(--red-l);border:1px solid rgba(184,69,69,.3)}
+    .badge-external{background:var(--green-bg);color:var(--green);border:1px solid rgba(58,155,112,.3)}
+
+    /* Suspect grid */
+    .suspect-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+    .sus-card{background:var(--s2);border:1.5px solid var(--border2);border-radius:var(--r);padding:16px 12px;cursor:pointer;text-align:center;transition:all .2s}
+    .sus-card:hover{border-color:var(--gold);transform:translateY(-1px)}
+    .sus-card.sel{border-color:var(--gold);background:var(--gold-bg);box-shadow:0 0 0 1px var(--gold)}
+    .sus-card .sname{font-weight:600;margin-bottom:6px;font-size:.92rem}
+    .sus-card .sattrs{font-size:.76rem;color:var(--text2);line-height:1.5}
+    .sus-card .sbadge{margin-top:8px}
+
+    /* Testimony cards */
+    .t-card{background:var(--s2);border:1px solid var(--border2);border-radius:var(--r);padding:16px;margin-bottom:10px;transition:border-color .2s}
+    .t-card.criminal{border-color:rgba(201,164,74,.4)}
+    .t-card.external{border-left:3px solid var(--green)}
+    .t-card.flavor{border-style:dashed;background:transparent}
+    .t-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+    .t-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .t-preview{margin-top:10px;font-family:'Crimson Pro',Georgia,serif;font-size:1rem;color:var(--gold);font-style:italic;word-break:break-word;overflow-wrap:anywhere;line-height:1.6}
+    .t-preview.green{color:var(--green)}
+    /* Attribute visibility */
+    .vis-btn{background:transparent;border:1px solid var(--border2);border-radius:4px;cursor:pointer;font-size:.7rem;padding:2px 7px;color:var(--text3);font-family:inherit;transition:all .15s;margin-left:4px;white-space:nowrap}
+    .vis-btn.on{background:var(--green-bg);border-color:rgba(58,155,112,.4);color:var(--green)}
+    .vis-btn.off{background:var(--red-bg);border-color:rgba(184,69,69,.3);color:var(--red-l)}
+    td .vis-btn{vertical-align:middle}
+
+    /* Consistency badge */
+    .consist-ok{display:inline-flex;align-items:center;background:var(--green-bg);color:var(--green);border:1px solid rgba(58,155,112,.3);border-radius:4px;font-size:.7rem;padding:1px 7px;margin-left:8px;vertical-align:middle}
+    .consist-bad{display:inline-flex;align-items:center;background:var(--red-bg);color:var(--red-l);border:1px solid rgba(184,69,69,.3);border-radius:4px;font-size:.7rem;padding:1px 7px;margin-left:8px;vertical-align:middle}
+
+    /* Verify */
+    .vresult{padding:16px 20px;border-radius:var(--r);margin-top:16px;line-height:1.9}
+    .vresult.ok{background:var(--green-bg);border:1px solid rgba(58,155,112,.4)}
+    .vresult.bad{background:var(--red-bg);border:1px solid rgba(184,69,69,.4)}
+    .vresult.warn{background:var(--gold-bg);border:1px solid rgba(201,164,74,.3)}
+    .vresult strong{display:block;margin-bottom:4px}
+    .url-row{display:flex;gap:8px;margin-top:14px}
+    .url-box{flex:1;background:var(--s3);border:1px solid var(--border2);border-radius:7px;padding:9px 14px;font-size:.78rem;color:var(--text2);word-break:break-all;font-family:monospace}
+
+    /* Rule box */
+    .rule-box{background:var(--gold-bg);border:1px solid rgba(201,164,74,.2);border-radius:var(--r);padding:16px 20px;margin-bottom:20px}
+    .rule-box h3{font-family:'Cinzel',serif;font-size:.78rem;color:var(--gold);letter-spacing:.1em;margin-bottom:8px}
+    .rule-box ul{padding-left:18px;color:var(--text2);font-size:.86rem}
+    .rule-box li{margin-bottom:3px}
+
+    /* Solve testimonies */
+    .solve-t{background:var(--s2);border:1px solid var(--border2);border-radius:var(--r);padding:14px 18px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px}
+    .solve-t.external{border-left:3px solid var(--green)}
+    .solve-t.flavor{border-style:dashed;background:transparent}
+    .speaker{font-weight:600;color:var(--gold);margin-right:4px;white-space:nowrap}
+    .quote{font-family:'Crimson Pro',Georgia,serif;font-size:1rem;word-break:break-word;overflow-wrap:anywhere;line-height:1.65}
+    .solve-t>div:first-child{flex:1;min-width:0}
+    .guess-btns{display:flex;gap:6px;flex-shrink:0}
+    .g-btn{padding:4px 12px;border-radius:5px;border:1px solid var(--border2);cursor:pointer;font-size:.78rem;font-weight:500;background:transparent;color:var(--text3);transition:all .2s;font-family:inherit}
+    .g-btn.honest.on{background:var(--green);border-color:var(--green);color:#fff}
+    .g-btn.liar.on{background:var(--red);border-color:var(--red);color:#fff}
+
+    /* Modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(2px)}
+    .modal{background:var(--s1);border-radius:16px;padding:36px 32px;max-width:420px;width:90%;text-align:center;border:1px solid var(--border2);box-shadow:0 20px 60px rgba(0,0,0,.6)}
+    .modal.correct{border-color:var(--green)}
+    .modal.wrong{border-color:var(--red)}
+    .modal h2{font-family:'Cinzel',serif;font-size:1.5rem;margin-bottom:14px}
+    .modal.correct h2{color:var(--green)}
+    .modal.wrong h2{color:var(--red-l)}
+    .modal p{color:var(--text2);margin-bottom:24px;line-height:1.9;font-size:.95rem}
+
+    /* Misc */
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .mt12{margin-top:12px}.mt20{margin-top:20px}
+    .hint{font-size:.8rem;color:var(--text3)}
+    .answer-ctr{text-align:center;margin-top:24px}
+
+    /* Home */
+    .home-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:8px}
+    .home-card{background:var(--s1);border:2px solid var(--border);border-radius:16px;padding:44px 28px;text-align:center;cursor:pointer;transition:all .3s}
+    .home-card:hover{border-color:var(--gold);transform:translateY(-4px);box-shadow:0 20px 56px rgba(0,0,0,.5)}
+    .home-card .hc-icon{font-size:2.2rem;margin-bottom:20px;display:block;color:var(--gold);font-family:'Cinzel',serif;letter-spacing:.05em}
+    .home-card h2{font-family:'Cinzel',serif;font-size:1.15rem;color:var(--gold);margin-bottom:12px;letter-spacing:.05em}
+    .home-card p{font-size:.86rem;color:var(--text2);line-height:1.75}
+    @media(max-width:520px){.home-grid{grid-template-columns:1fr}}
+
+    /* Puzzle list */
+    .pzl-item{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:16px 20px;margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .pzl-item.builtin{border-left:3px solid var(--gold)}
+    .pzl-title{font-weight:600;font-size:.93rem;word-break:break-word;overflow-wrap:anywhere}
+    .pzl-meta{font-size:.73rem;color:var(--text3);margin-top:4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    /* Sort bar */
+    .sort-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+    .sort-btn{padding:5px 14px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text3);font-size:.78rem;cursor:pointer;transition:all .2s;font-family:inherit}
+    .sort-btn.active{background:var(--gold-bg);border-color:rgba(201,164,74,.5);color:var(--gold)}
+    /* Like button */
+    .like-btn{background:transparent;border:1px solid var(--border2);border-radius:20px;padding:4px 11px;cursor:pointer;font-size:.78rem;color:var(--text3);display:inline-flex;align-items:center;gap:4px;transition:all .2s;font-family:inherit;white-space:nowrap}
+    .like-btn.liked{background:var(--red-bg);border-color:rgba(184,69,69,.4);color:var(--red-l)}
+    .like-btn:hover:not(.liked){border-color:var(--red-l);color:var(--red-l)}
+    /* Publish section */
+    .publish-section{background:var(--green-bg);border:1px solid rgba(58,155,112,.3);border-radius:var(--r);padding:20px 24px;margin-top:16px}
+
+    /* Nav */
+    .home-btn{position:fixed;top:18px;left:20px;z-index:100;background:var(--s2);border:1px solid var(--border2);border-radius:6px;padding:6px 14px;color:var(--text2);font-size:.8rem;font-weight:600;cursor:pointer;letter-spacing:.04em;transition:all .2s;font-family:inherit;display:none}
+    .home-btn:hover{border-color:var(--gold);color:var(--gold)}
+
+    /* ── ILLUSTRATION ENHANCEMENTS ── */
+    @keyframes goldGlow{0%,100%{text-shadow:0 0 24px rgba(201,164,74,.22),0 0 48px rgba(201,164,74,.06)}50%{text-shadow:0 0 38px rgba(201,164,74,.48),0 0 76px rgba(201,164,74,.16)}}
+    header h1{animation:goldGlow 4s ease-in-out infinite}
+
+    /* Case badge */
+    .case-badge{display:inline-block;border:1px solid rgba(201,164,74,.3);border-radius:2px;padding:2px 14px;font-size:.58rem;letter-spacing:.28em;color:rgba(201,164,74,.55);font-family:'Cinzel',serif;text-transform:uppercase;margin-bottom:10px;background:rgba(201,164,74,.04)}
+
+    /* Header ornament */
+    .hd-orn{display:flex;align-items:center;gap:14px;justify-content:center;margin:8px auto 6px;max-width:280px}
+    .hd-line{flex:1;height:1px}
+    .hd-line.l{background:linear-gradient(90deg,transparent,rgba(201,164,74,.45))}
+    .hd-line.r{background:linear-gradient(270deg,transparent,rgba(201,164,74,.45))}
+
+    /* Home card illustration */
+    .hc-illus{width:80px;height:80px;margin:0 auto 18px;color:var(--gold);opacity:.78;filter:drop-shadow(0 0 10px rgba(201,164,74,.22));transition:all .35s}
+    .home-card:hover .hc-illus{opacity:1;filter:drop-shadow(0 0 26px rgba(201,164,74,.6));transform:translateY(-4px) scale(1.08)}
+
+    /* Home card corner brackets */
+    .home-card{position:relative;overflow:visible}
+    .home-card::before,.home-card::after{content:'';position:absolute;width:20px;height:20px;border-color:rgba(201,164,74,.28);border-style:solid;pointer-events:none;transition:border-color .3s;z-index:2}
+    .home-card::before{top:-1px;left:-1px;border-width:1.5px 0 0 1.5px;border-radius:3px 0 0 0}
+    .home-card::after{top:-1px;right:-1px;border-width:1.5px 1.5px 0 0;border-radius:0 3px 0 0}
+    .home-card:hover::before,.home-card:hover::after{border-color:rgba(201,164,74,.72)}
+    .hc-bt{position:absolute;inset:0;pointer-events:none;z-index:2}
+    .hc-bt::before,.hc-bt::after{content:'';position:absolute;width:20px;height:20px;border-color:rgba(201,164,74,.28);border-style:solid;transition:border-color .3s}
+    .hc-bt::before{bottom:-1px;left:-1px;border-width:0 0 1.5px 1.5px;border-radius:0 0 0 3px}
+    .hc-bt::after{bottom:-1px;right:-1px;border-width:0 1.5px 1.5px 0;border-radius:0 0 3px 0}
+    .home-card:hover .hc-bt::before,.home-card:hover .hc-bt::after{border-color:rgba(201,164,74,.72)}
+
+    /* Per-speaker call names */
+    .callnames-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+    .callnames-label{font-size:.72rem;color:var(--text3);white-space:nowrap;margin-right:2px}
+    .callname-item{display:flex;align-items:center;gap:4px;font-size:.8rem;color:var(--text2)}
+    .callname-item input{background:var(--s2);border:1px solid var(--border);border-radius:4px;padding:2px 6px;color:var(--text);font-size:.8rem;text-align:center}
+
+    /* Case title banner (solver) */
+    .case-banner{text-align:center;margin-bottom:24px;padding:20px 24px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r);position:relative;overflow:hidden}
+    .case-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(201,164,74,.08) 0%,transparent 70%);pointer-events:none}
+    .case-banner-label{font-size:.58rem;letter-spacing:.3em;color:rgba(201,164,74,.55);font-family:'Cinzel',serif;text-transform:uppercase;display:block;margin-bottom:8px}
+    .case-banner-name{font-family:'Cinzel',Georgia,serif;font-size:1.45rem;font-weight:700;color:var(--gold);letter-spacing:.06em;text-shadow:0 0 24px rgba(201,164,74,.28);display:block}
+
+    /* Fingerprint watermark */
+    .fp-bg{position:fixed;right:-90px;bottom:-90px;width:420px;height:420px;pointer-events:none;z-index:0;opacity:.022;color:var(--gold)}
+    .wrap{position:relative;z-index:1}
+  </style>
+</head>
+<body>
+<button class="home-btn" id="home-btn" onclick="goHome()">◀ ホーム</button>
+<!-- Fingerprint watermark -->
+<div class="fp-bg" aria-hidden="true">
+<svg viewBox="0 0 200 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M100 15C52 15 14 53 14 101C14 145 42 183 78 207" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+  <path d="M100 30C62 30 28 64 28 108C28 148 52 184 84 206" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+  <path d="M100 45C72 45 44 73 44 112C44 151 64 184 92 206" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+  <path d="M100 60C80 60 58 82 58 116C58 152 74 184 98 206" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+  <path d="M100 75C88 75 72 91 72 120C72 151 84 180 102 204" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+  <path d="M100 90C94 90 82 102 82 124C82 150 92 176 104 202" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="100" cy="130" rx="10" ry="14" stroke="currentColor" stroke-width="4"/>
+  <path d="M100 15C148 15 186 53 186 101C186 145 158 183 122 207" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+  <path d="M100 30C138 30 172 64 172 108C172 148 148 184 116 206" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+  <path d="M100 45C128 45 156 73 156 112C156 151 136 184 108 206" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+  <path d="M100 60C120 60 142 82 142 116C142 152 126 184 102 206" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+  <path d="M100 75C112 75 128 91 128 120C128 151 116 180 98 204" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+  <path d="M100 90C106 90 118 102 118 124C118 150 108 176 96 202" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+</svg>
+</div>
+<button class="lang-btn" id="lang-btn" onclick="toggleLang()">EN</button>
+<div class="wrap">
+  <header>
+    <div class="case-badge">CASE FILE</div>
+    <h1 id="page-title">証言パズル</h1>
+    <div class="hd-orn">
+      <div class="hd-line l"></div>
+      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true"><polygon points="5,0 10,5 5,10 0,5" fill="rgba(201,164,74,0.6)"/></svg>
+      <div class="hd-line r"></div>
+    </div>
+    <p id="header-sub">証言を読み解き、犯人を暴け</p>
+  </header>
+  <div id="app"></div>
+</div>
+<script>
+// ===== I18N =====
+const I18N = {
+  ja: {
+    title:'証言パズル', sub_create:'証言を読み解き、犯人を暴け', sub_solve:'証言から犯人を特定せよ', invalid_url:'無効なURLです',
+    lang_toggle:'EN',
+    s1:'容疑者・属性', s2:'犯人設定', s3:'証言設定', s4:'検証・共有',
+    s1_title:'容疑者・属性の設定', col_name:'名前', col_fp:'一人称', col_callname:'呼び名', add_suspect:'＋ 容疑者を追加', add_attr:'＋ 属性を追加', del:'削除', next:'次へ →', prev:'← 戻る',
+    case_name_label:'事件名', case_name_placeholder:'例：図書館の密室事件',
+    s2_title:'犯人を設定', s2_hint:'犯人は必ず嘘をつきます。プレイヤーには見えません。', criminal_badge:'★ 犯人',
+    s3_title:'証言の設定', s3_hint:'嘘つきの発言は論理的に逆の意味で評価されます', callnames_label:'呼び名：',
+    sec_suspect:'容疑者の証言', sec_ext:'外部証人（常に正直）', sec_ext_hint:'容疑者以外の人物。証言は必ず本当です。',
+    sec_flavor:'フレーバー発言（論理に影響しない）', sec_flavor_hint:'雰囲気づくりの自由記述。解答の判定には使われません。',
+    add_ext:'＋ 外部証人を追加', add_flavor:'＋ フレーバーを追加',
+    fixed_liar:'嘘つき（固定）', always_honest:'常に正直',
+    select_type:'証言タイプを選択…',
+    t_is_crim:'〇〇が犯人だ', t_not_crim:'〇〇は犯人じゃない', t_crim_attr:'犯人の〇〇は〇〇だ',
+    t_sus_attr:'〇〇の〇〇は〇〇だ', t_is_honest:'〇〇は正直者だ', t_is_liar:'〇〇は嘘つきだ', t_count:'嘘つきは〇〇人だ',
+    t_liar_parity:'嘘つきの人数は偶数/奇数だ', t_honest_count:'正直者は〇〇人だ',
+    t_liar_at_least:'嘘つきは〇〇人以上だ', t_liar_at_most:'嘘つきは〇〇人以下だ',
+    t_attr_honest:'〇〇が〇〇な人は正直者だ', t_attr_liar:'〇〇が〇〇な人は嘘つきだ',
+    t_culprit_same_attr:'犯人は〇〇と同じ〇〇だ',
+    t_flavor:'その他（推理には影響しません）',
+    liar_unit:'人', honest_unit:'人', parity_even:'偶数', parity_odd:'奇数', consist_ok:'✓ 整合', consist_bad:'✗ 矛盾',
+    s4_title:'検証・共有', s4_hint:'解が唯一かどうかを確認してから共有できます',
+    verify_btn:'パズルを検証する', share_label:'共有URL（このURLでパズルを遊べます）', copy_btn:'コピー',
+    v_ok:'✓ 検証成功', v_ok_msg:'解はただ一つ。設定した犯人・嘘つきと一致しています。',
+    v_warn:'矛盾あり', v_warn_msg:'どの組み合わせも成立しません。証言を見直してください。',
+    v_bad:'✗ 別解あり', v_intended:'← 設定した解', v_bad_hint:'証言を追加・変更して別解を排除してください。',
+    v_criminal:'犯人', v_liars:'嘘つき', v_none:'なし',
+    rules_title:'GAME RULES', rule1:'犯人は必ず嘘をついています', rule2:'外部証人の証言は必ず本当です', rule3:'それ以外の人物が正直かどうかは不明です',
+    sus_title:'容疑者一覧', test_title:'証言', test_hint:'右のボタンで正直/嘘つきのメモができます（任意）',
+    ans_title:'犯人を指定せよ', submit_btn:'答えを送信', honest_btn:'正直', liar_btn:'嘘つき',
+    correct_title:'正解', wrong_title:'不正解',
+    correct_msg:(name,liars)=>`犯人は <strong style="color:var(--text)">${name}</strong> でした。<br>嘘つき: ${liars}`,
+    wrong_msg:'もう一度証言を整理してみよう。',
+    close_btn:'閉じる', retry_btn:'もう一度考える',
+    flavor_placeholder:'例: 昨日の夜は雨だった',
+    home_tagline:'証言を設定するか、謎を解け',
+    home_create_title:'パズルを作る', home_create_desc:'容疑者・証言を設定し、解が唯一になるパズルを作ってみよう。',
+    home_play_title:'パズルを解く', home_play_desc:'用意されたパズルや共有されたURLに挑戦しよう。犯人を見つけ出せ。',
+    list_title:'パズル一覧', list_builtin:'収録パズル', list_saved:'保存済みパズル',
+    list_empty:'まだ保存済みのパズルはありません。パズルを作って保存してみよう！',
+    list_play:'▶ プレイ', list_delete:'削除', list_back:'← 戻る',
+    list_url_label:'URLから遊ぶ', list_url_placeholder:'共有URLを貼り付け', list_url_go:'読み込む',
+    save_btn:'リストに保存', save_prompt:'パズルのタイトルを入力してください:', save_ok:'保存しました！',
+    publish_btn:'公開する', update_btn:'更新する', publish_auto_diff_note:'難易度はプレイヤーの一回目の正答率から自動計算されます（5回プレイ後に表示）', publish_ok:'公開しました！', publish_update_ok:'更新しました！', publish_fail:'公開に失敗しました。',
+    sort_new:'新着順', sort_likes:'人気順', sort_diff_hard:'難易度：高い順', sort_diff_easy:'難易度：低い順',
+    plays_unit:'回プレイ', diff_pending:'集計中',
+    home_btn_label:'ホーム', finish_btn:'作成を終了してホームへ',
+    edit_btn:'編集', attr_vis:'公開', attr_hid:'非公開',
+    loading:'読み込み中…', list_online:'公開パズル',
+    back_home:'← ホームに戻る',
+  },
+  en: {
+    title:'Testimony Puzzle', sub_create:'Create a puzzle or solve one from a URL', sub_solve:'Read the clues. Find the culprit.', invalid_url:'Invalid URL',
+    lang_toggle:'日本語',
+    s1:'Suspects & Traits', s2:'Set Culprit', s3:'Testimonies', s4:'Verify & Share',
+    s1_title:'Suspects & Traits', col_name:'Name', col_fp:null, col_callname:'Alias', add_suspect:'+ Add Suspect', add_attr:'+ Add Trait', del:'Remove', next:'Next →', prev:'← Back',
+    case_name_label:'Case Name', case_name_placeholder:'e.g. The Library Mystery',
+    s2_title:'Set the Culprit', s2_hint:'The culprit always lies. Hidden from players.', criminal_badge:'★ Culprit',
+    s3_title:'Set Testimonies', s3_hint:"Liars' statements are evaluated as logically false.", callnames_label:'Aliases:',
+    sec_suspect:'Suspect Testimonies', sec_ext:'External Witnesses (always truthful)', sec_ext_hint:'People outside the suspect list. Their testimony is always true.',
+    sec_flavor:'Flavor Statements (no logical effect)', sec_flavor_hint:'Atmospheric free text. Not used in answer verification.',
+    add_ext:'+ Add External Witness', add_flavor:'+ Add Flavor Text',
+    fixed_liar:'Liar (fixed)', always_honest:'Always truthful',
+    select_type:'Select testimony type…',
+    t_is_crim:'〇〇 is the culprit', t_not_crim:'〇〇 is not the culprit', t_crim_attr:"The culprit's 〇〇 is 〇〇",
+    t_sus_attr:"〇〇's 〇〇 is 〇〇", t_is_honest:'〇〇 is honest', t_is_liar:'〇〇 is a liar', t_count:'There are 〇〇 liars',
+    t_liar_parity:'The number of liars is even/odd', t_honest_count:'There are 〇〇 honest people',
+    t_liar_at_least:'There are at least 〇〇 liars', t_liar_at_most:'There are at most 〇〇 liars',
+    t_attr_honest:'The person whose 〇〇 is 〇〇 is honest', t_attr_liar:'The person whose 〇〇 is 〇〇 is a liar',
+    t_culprit_same_attr:"The culprit has the same 〇〇 as 〇〇",
+    t_flavor:'Other (no logical effect)',
+    liar_unit:'liars', honest_unit:'honest people', parity_even:'even', parity_odd:'odd', consist_ok:'✓ Consistent', consist_bad:'✗ Inconsistent',
+    s4_title:'Verify & Share', s4_hint:'Confirm the puzzle has a unique solution before sharing.',
+    verify_btn:'Verify Puzzle', share_label:'Share URL (players use this to play)', copy_btn:'Copy',
+    v_ok:'✓ Verified', v_ok_msg:'Exactly one solution. Matches your intended culprit and liars.',
+    v_warn:'Contradiction', v_warn_msg:'No valid combination found. Please review the testimonies.',
+    v_bad:'✗ Multiple Solutions', v_intended:'← your intended solution', v_bad_hint:'Add or change testimonies to eliminate alternate solutions.',
+    v_criminal:'Culprit', v_liars:'Liars', v_none:'none',
+    rules_title:'GAME RULES', rule1:'The culprit always lies.', rule2:'External witnesses always tell the truth.', rule3:'All other suspects may be honest or lying.',
+    sus_title:'Suspects', test_title:'Testimonies', test_hint:'Use the buttons to note who you think is honest or lying (optional).',
+    ans_title:'Who Is the Culprit?', submit_btn:'Submit Answer', honest_btn:'Honest', liar_btn:'Liar',
+    correct_title:'Correct!', wrong_title:'Wrong',
+    correct_msg:(name,liars)=>`The culprit was <strong style="color:var(--text)">${name}</strong>.<br>Liars: ${liars}`,
+    wrong_msg:'Review the testimonies and try again.',
+    close_btn:'Close', retry_btn:'Try Again',
+    flavor_placeholder:'e.g. It was raining last night',
+    home_tagline:'Design puzzles or crack one.',
+    home_create_title:'Create', home_create_desc:'Set up suspects and testimonies. Verify your puzzle has one unique solution.',
+    home_play_title:'Play', home_play_desc:'Pick a puzzle from the list or paste a shared URL. Find the culprit.',
+    list_title:'Puzzle List', list_builtin:'Built-in Puzzles', list_saved:'Saved Puzzles',
+    list_empty:"No saved puzzles yet. Create one and save it to this list!",
+    list_play:'▶ Play', list_delete:'Delete', list_back:'← Back',
+    list_url_label:'Play from URL', list_url_placeholder:'Paste share URL here', list_url_go:'Load',
+    save_btn:'Save to List', save_prompt:'Enter a title for this puzzle:', save_ok:'Saved!',
+    publish_btn:'Publish', update_btn:'Update', publish_auto_diff_note:"Difficulty is calculated automatically from players' first-attempt correct rate (shown after 5 plays)", publish_ok:'Published!', publish_update_ok:'Updated!', publish_fail:'Failed to publish.',
+    sort_new:'Newest', sort_likes:'Most Liked', sort_diff_hard:'Hardest First', sort_diff_easy:'Easiest First',
+    plays_unit:' plays', diff_pending:'Collecting data',
+    home_btn_label:'Home', finish_btn:'Finish & Go Home',
+    edit_btn:'Edit', attr_vis:'Visible', attr_hid:'Hidden',
+    loading:'Loading…', list_online:'Published Puzzles',
+    back_home:'← Back to Home',
+  }
+};
+function L(k){ return I18N[state.lang][k] ?? I18N.ja[k]; }
+
+// ===== STATE =====
+let state = {
+  mode: 'home', step: 1,
+  puzzle: createEmptyPuzzle(),
+  lang: localStorage.getItem('lang') || 'ja',
+  verifyResult: null, shareUrl: null,
+  solveState: null, showModal: null,
+  editingId: null,
+  onlinePuzzles: null, // null=not loaded, []=loaded
+  listSort: 'new',
+  playingId: null,
+};
+
+function createEmptyPuzzle(){
+  return {
+    suspects:[
+      {name:'容疑者A',callNames:{},attrs:{},hiddenAttrs:{},isLiar:false,testimony:null,firstPerson:'私'},
+      {name:'容疑者B',callNames:{},attrs:{},hiddenAttrs:{},isLiar:false,testimony:null,firstPerson:'私'},
+      {name:'容疑者C',callNames:{},attrs:{},hiddenAttrs:{},isLiar:false,testimony:null,firstPerson:'私'},
+    ],
+    attributes:[],criminalIdx:0,
+    caseName:'', externalWitnesses:[],
+  };
+}
+
+// ===== SENTENCE TEMPLATES =====
+function jaSentence(t, puzzle, speakerIdx){
+  const self = speakerIdx != null && t.suspectIdx === speakerIdx;
+  const callOf = idx => (speakerIdx != null ? puzzle.suspects[speakerIdx]?.callNames?.[idx] : null) || puzzle.suspects[idx]?.name || '???';
+  const n = self ? (puzzle.suspects[speakerIdx]?.firstPerson ?? '私') : callOf(t.suspectIdx);
+  switch(t.type){
+    case 'suspect_is_criminal':  return `${n}が犯人だ`;
+    case 'suspect_not_criminal': return `${n}は犯人じゃない`;
+    case 'criminal_has_attr':    return `犯人の${t.attrName}は${t.attrValue}だ`;
+    case 'suspect_has_attr':     return `${n}の${t.attrName}は${t.attrValue}だ`;
+    case 'suspect_is_honest':    return `${n}は正直者だ`;
+    case 'suspect_is_liar':      return `${n}は嘘つきだ`;
+    case 'liar_count':           return `嘘つきは${t.count}人だ`;
+    case 'liar_parity':          return `嘘つきの人数は${t.isEven?'偶数':'奇数'}だ`;
+    case 'liar_at_least':        return `嘘つきは${t.count}人以上だ`;
+    case 'liar_at_most':         return `嘘つきは${t.count}人以下だ`;
+    case 'honest_count':         return `正直者は${t.count}人だ`;
+    case 'attr_is_honest':       return `${t.attrName}が${t.attrValue}な人は正直者だ`;
+    case 'attr_is_liar':         return `${t.attrName}が${t.attrValue}な人は嘘つきだ`;
+    case 'culprit_same_attr':    return `犯人は${self?puzzle.suspects[speakerIdx]?.firstPerson??'私':callOf(t.suspectIdx)}と同じ${t.attrName}だ`;
+    case 'flavor':               return t.text ?? '';
+    default: return '（不明）';
+  }
+}
+
+function enSentence(t, puzzle, speakerIdx){
+  const self = speakerIdx != null && t.suspectIdx === speakerIdx;
+  const callOf = idx => (speakerIdx != null ? puzzle.suspects[speakerIdx]?.callNames?.[idx] : null) || puzzle.suspects[idx]?.name || '???';
+  const n = callOf(t.suspectIdx);
+  const c = t.count ?? 1;
+  switch(t.type){
+    case 'suspect_is_criminal':  return self ? 'I am the culprit'     : `${n} is the culprit`;
+    case 'suspect_not_criminal': return self ? 'I am not the culprit' : `${n} is not the culprit`;
+    case 'criminal_has_attr':    return `The culprit's ${t.attrName} is ${t.attrValue}`;
+    case 'suspect_has_attr':     return self ? `My ${t.attrName} is ${t.attrValue}` : `${n}'s ${t.attrName} is ${t.attrValue}`;
+    case 'suspect_is_honest':    return self ? 'I am honest'   : `${n} is honest`;
+    case 'suspect_is_liar':      return self ? 'I am a liar'   : `${n} is a liar`;
+    case 'liar_count':           return `There ${c===1?'is':'are'} ${c} liar${c===1?'':'s'}`;
+    case 'liar_parity':          return `The number of liars is ${t.isEven?'even':'odd'}`;
+    case 'liar_at_least':        { const c=t.count??1; return `There ${c===1?'is':'are'} at least ${c} liar${c===1?'':'s'}`; }
+    case 'liar_at_most':         { const c=t.count??1; return `There ${c===1?'is':'are'} at most ${c} liar${c===1?'':'s'}`; }
+    case 'honest_count':         { const h=t.count??1; return `There ${h===1?'is':'are'} ${h} honest person${h===1?'':'s'}`; }
+    case 'attr_is_honest':       return `The person whose ${t.attrName} is ${t.attrValue} is honest`;
+    case 'attr_is_liar':         return `The person whose ${t.attrName} is ${t.attrValue} is a liar`;
+    case 'culprit_same_attr':    return `The culprit has the same ${t.attrName} as ${self?'me':n}`;
+    case 'flavor':               return t.text ?? '';
+    default: return '(unknown)';
+  }
+}
+
+function getSentence(t, puzzle, speakerIdx){
+  return state.lang === 'en' ? enSentence(t, puzzle, speakerIdx) : jaSentence(t, puzzle, speakerIdx);
+}
+
+// ===== LOGIC =====
+function evaluate(t, cIdx, liarSet, puzzle){
+  const {suspects} = puzzle;
+  switch(t.type){
+    case 'suspect_is_criminal':  return t.suspectIdx === cIdx;
+    case 'suspect_not_criminal': return t.suspectIdx !== cIdx;
+    case 'criminal_has_attr':{ const c=suspects[cIdx]; return c?c.attrs[t.attrName]===t.attrValue:false; }
+    case 'suspect_has_attr':{ const s=suspects[t.suspectIdx]; return s?s.attrs[t.attrName]===t.attrValue:false; }
+    case 'suspect_is_honest': return !liarSet.has(t.suspectIdx);
+    case 'suspect_is_liar':   return liarSet.has(t.suspectIdx);
+    case 'liar_count':        return liarSet.size === t.count;
+    case 'liar_parity':       return t.isEven ? liarSet.size%2===0 : liarSet.size%2!==0;
+    case 'liar_at_least':     return liarSet.size >= t.count;
+    case 'liar_at_most':      return liarSet.size <= t.count;
+    case 'culprit_same_attr': { const ca=suspects[cIdx]?.attrs[t.attrName]; const sa=suspects[t.suspectIdx]?.attrs[t.attrName]; if(ca===undefined||sa===undefined) return null; return ca===sa; }
+    case 'honest_count':      return (suspects.length - liarSet.size) === t.count;
+    case 'attr_is_honest':    { const idx=suspects.findIndex(s=>s.attrs[t.attrName]===t.attrValue); if(idx===-1) return null; return !liarSet.has(idx); }
+    case 'attr_is_liar':      { const idx=suspects.findIndex(s=>s.attrs[t.attrName]===t.attrValue); if(idx===-1) return null; return liarSet.has(idx); }
+    default: return null;
+  }
+}
+
+function verifyPuzzle(puzzle){
+  const {suspects,criminalIdx,externalWitnesses} = puzzle;
+  const n = suspects.length;
+  const intendedLS = new Set(suspects.map((s,i)=>(s.isLiar||i===criminalIdx)?i:-1).filter(i=>i!==-1));
+  const suspWithT = suspects.map((s,i)=>({...s,idx:i})).filter(s=>s.testimony);
+  const extWithT  = externalWitnesses.filter(ew=>ew.testimony);
+  const solutions = [];
+  for(let cIdx=0;cIdx<n;cIdx++){
+    for(let bits=0;bits<(1<<n);bits++){
+      const ls = new Set();
+      for(let i=0;i<n;i++) if(bits&(1<<i)) ls.add(i);
+      if(!ls.has(cIdx)) continue;
+      let ok=true;
+      for(const s of suspWithT){
+        const v=evaluate(s.testimony,cIdx,ls,puzzle);
+        if(v===null){ok=false;break;}
+        const lie=ls.has(s.idx);
+        if(lie&&v){ok=false;break;} if(!lie&&!v){ok=false;break;}
+      }
+      if(!ok) continue;
+      for(const ew of extWithT){ if(!evaluate(ew.testimony,cIdx,ls,puzzle)){ok=false;break;} }
+      if(ok){
+        const li=[...ls].sort();
+        solutions.push({
+          criminalIdx:cIdx, criminalName:suspects[cIdx].name,
+          liarNames:li.map(i=>suspects[i]?.name),
+          isIntended:cIdx===criminalIdx&&JSON.stringify(li)===JSON.stringify([...intendedLS].sort()),
+        });
+      }
+    }
+  }
+  return solutions;
+}
+
+// ===== ENCODING =====
+function encPuzzle(p){ try{const b=new TextEncoder().encode(JSON.stringify(p));return btoa(Array.from(b,x=>String.fromCharCode(x)).join(''));}catch(e){return null;} }
+function decPuzzle(s){ try{const b=new Uint8Array(Array.from(atob(s),c=>c.charCodeAt(0)));return JSON.parse(new TextDecoder().decode(b));}catch(e){return null;} }
+
+// ===== TESTIMONY BUILDER =====
+function makeT(type, puzzle){
+  const t={type};
+  if(['suspect_is_criminal','suspect_not_criminal','suspect_is_honest','suspect_is_liar','suspect_has_attr'].includes(type)) t.suspectIdx=0;
+  if(['criminal_has_attr','suspect_has_attr'].includes(type)){ t.attrName=puzzle.attributes[0]?.name??''; t.attrValue=puzzle.attributes[0]?.values[0]??''; }
+  if(['liar_count','honest_count','liar_at_least','liar_at_most'].includes(type)) t.count=1;
+  if(type==='culprit_same_attr'){ t.suspectIdx=0; t.attrName=puzzle.attributes[0]?.name??''; }
+  if(type==='liar_parity') t.isEven=true;
+  if(['attr_is_honest','attr_is_liar'].includes(type)){ t.attrName=puzzle.attributes[0]?.name??''; t.attrValue=puzzle.attributes[0]?.values[0]??''; }
+  if(type==='flavor') t.text='';
+  return t;
+}
+
+// ===== MUTATIONS =====
+function addSuspect(){ const L2='ABCDEFGHIJ'; const a={}; const h={}; state.puzzle.attributes.forEach(x=>{a[x.name]=x.values[0]??'';h[x.name]=false;}); state.puzzle.suspects.push({name:'容疑者'+(L2[state.puzzle.suspects.length]??'?'),callNames:{},attrs:a,hiddenAttrs:h,isLiar:false,testimony:null,firstPerson:'私'}); render(); }
+function delSuspect(idx){
+  if(state.puzzle.suspects.length<=2) return;
+  state.puzzle.suspects.splice(idx,1);
+  if(state.puzzle.criminalIdx>=state.puzzle.suspects.length) state.puzzle.criminalIdx=0;
+  const fix=t=>{ if(!t) return null; if(['suspect_is_criminal','suspect_not_criminal','suspect_has_attr','suspect_is_honest','suspect_is_liar','culprit_same_attr'].includes(t.type)){ if(t.suspectIdx===idx) return null; if(t.suspectIdx>idx) t.suspectIdx--; } return t; };
+  state.puzzle.suspects.forEach(s=>{s.testimony=fix(s.testimony);});
+  state.puzzle.externalWitnesses.forEach(ew=>{ew.testimony=fix(ew.testimony);});
+  render();
+}
+function updCaseName(v){ state.puzzle.caseName=v; }
+function updSName(idx,v){ state.puzzle.suspects[idx].name=v; }
+function updSCallNameFor(speakerIdx,targetIdx,v){ const s=state.puzzle.suspects[speakerIdx]; s.callNames=s.callNames??{}; s.callNames[targetIdx]=v; render(); }
+function updSFP(idx,v){ state.puzzle.suspects[idx].firstPerson=v; }
+function updSAttr(si,an,v){ state.puzzle.suspects[si].attrs[an]=v; }
+function addAttr(){ const name=prompt(state.lang==='ja'?'属性名（例：職業）:':'Trait name (e.g. Job):'); if(!name?.trim()) return; const vs=prompt(state.lang==='ja'?'値をカンマ区切りで（例：医者,弁護士）:':'Values, comma-separated (e.g. Doctor,Lawyer):'); if(!vs?.trim()) return; const values=vs.split(',').map(v=>v.trim()).filter(Boolean); if(!values.length) return; const attr={name:name.trim(),values}; state.puzzle.attributes.push(attr); state.puzzle.suspects.forEach(s=>{s.attrs[attr.name]=attr.values[0];(s.hiddenAttrs=s.hiddenAttrs??{})[attr.name]=false;}); render(); }
+function delAttr(an){ state.puzzle.attributes=state.puzzle.attributes.filter(a=>a.name!==an); state.puzzle.suspects.forEach(s=>{delete s.attrs[an];if(s.hiddenAttrs)delete s.hiddenAttrs[an];}); const kill=t=>(t?.attrName===an)?null:t; state.puzzle.suspects.forEach(s=>{s.testimony=kill(s.testimony);}); state.puzzle.externalWitnesses.forEach(ew=>{ew.testimony=kill(ew.testimony);}); render(); }
+function updSAttrVis(si,an){ const s=state.puzzle.suspects[si]; s.hiddenAttrs=s.hiddenAttrs??{}; s.hiddenAttrs[an]=!s.hiddenAttrs[an]; render(); }
+function setCriminal(idx){ state.puzzle.criminalIdx=idx; render(); }
+function setSLiar(idx,v){ state.puzzle.suspects[idx].isLiar=v; render(); }
+function updSTType(idx,type){ state.puzzle.suspects[idx].testimony=type?makeT(type,state.puzzle):null; render(); }
+function updSTParam(idx,param,val){ const t=state.puzzle.suspects[idx].testimony; if(t){applyP(t,param,val);render();} }
+function addEW(){ state.puzzle.externalWitnesses.push({name:(state.lang==='ja'?'外部証人':'Witness')+(state.puzzle.externalWitnesses.length+1),testimony:null}); render(); }
+function delEW(idx){ state.puzzle.externalWitnesses.splice(idx,1); render(); }
+function updEWName(idx,v){
+  if(state.puzzle.suspects.some(s=>s.name===v)){
+    alert(state.lang==='ja'?`「${v}」は容疑者と同じ名前です。別の名前を使用してください。`:`"${v}" is already a suspect's name. Use a different name.`);
+    render(); return;
+  }
+  state.puzzle.externalWitnesses[idx].name=v;
+}
+function updEWTType(idx,type){ state.puzzle.externalWitnesses[idx].testimony=type?makeT(type,state.puzzle):null; render(); }
+function updEWTParam(idx,param,val){ const t=state.puzzle.externalWitnesses[idx].testimony; if(t){applyP(t,param,val);render();} }
+
+function applyP(t,param,val){ if(param==='suspectIdx'||param==='suspectIdx2'||param==='count') t[param]=parseInt(val); else if(param==='isEven') t[param]=val==='true'; else if(param==='attrName'){ t.attrName=val; t.attrValue=state.puzzle.attributes.find(a=>a.name===val)?.values[0]??''; } else t[param]=val; }
+function setStep(n){ state.step=n; state.verifyResult=null; state.shareUrl=null; render(); }
+function doVerify(){ state.verifyResult=verifyPuzzle(state.puzzle); state.shareUrl=null; if(state.verifyResult.length===1&&state.verifyResult[0].isIntended){const enc=encPuzzle(state.puzzle);if(enc) state.shareUrl=`${location.origin}${location.pathname}?puzzle=${enc}`;} render(); }
+function goHome(){ state.mode='home'; state.verifyResult=null; state.shareUrl=null; state.editingId=null; state.playingId=null; render(); }
+function goCreate(){ state.mode='create'; state.step=1; state.puzzle=createEmptyPuzzle(); state.verifyResult=null; state.shareUrl=null; state.editingId=null; state.playingId=null; render(); }
+function goList(){ state.mode='list'; state.onlinePuzzles=null; render(); fetchOnlinePuzzles(); }
+function startSolve(p,id){ state.mode='solve'; state.puzzle=p; state.playingId=id??null; state.solveState={suspectGuess:null,suspectGuesses:p.suspects.reduce((acc,_,i)=>{acc[i]=null;return acc;},{})}; render(); }
+function playBuiltin(idx){ const p=decPuzzle(getBuiltinPuzzles()[idx]?.encoded); if(p) startSolve(p); }
+function playSaved(id){ const e=(state.onlinePuzzles??[]).find(p=>p.id===id); if(e){const p=decPuzzle(e.puzzle_data);if(p){startSolve(p,id);if(SB_OK){const nc=(e.play_count??0)+1;e.play_count=nc;fetch(`${SUPABASE_URL}/rest/v1/puzzles?id=eq.${id}`,{method:'PATCH',headers:sbH(),body:JSON.stringify({play_count:nc})}).catch(()=>{});}}} }
+function editSavedPuzzle(id){ const e=(state.onlinePuzzles??[]).find(p=>p.id===id); if(!e)return; const p=decPuzzle(e.puzzle_data); if(!p)return; state.mode='create';state.step=1;state.puzzle=p;state.verifyResult=null;state.shareUrl=null;state.editingId=id;state.publishDiff=e.difficulty??0;render(); }
+function loadFromUrl(){
+  const raw=document.getElementById('url-input')?.value?.trim(); if(!raw) return;
+  const m=raw.match(/[?&]puzzle=([^&]+)/); const enc=m?m[1]:raw;
+  const p=decPuzzle(enc); if(p) startSolve(p); else alert(L('invalid_url'));
+}
+
+// ===== SUPABASE =====
+// 1. Go to https://supabase.com → New project (free tier)
+// 2. Run the SQL below in the SQL editor:
+//    create table puzzles (id uuid primary key default gen_random_uuid(), title text not null, puzzle_data text not null, created_at timestamptz default now());
+//    alter table puzzles enable row level security;
+//    create policy "public_all" on puzzles for all using (true) with check (true);
+// 3. Settings → API → paste URL and anon key below:
+const SUPABASE_URL = 'https://pzasjwplwxjmueivknzp.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6YXNqd3Bsd3hqbXVlaXZrbnpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MDMxNDAsImV4cCI6MjEwMzM3OTE0MH0.OXk8LIAr3R4zUcZOTRU3LAO_ukK9qIFKEbDecjEPRE8';
+const SB_OK = SUPABASE_URL !== 'YOUR_PROJECT_URL';
+const sbH = ()=>({'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json'});
+
+async function fetchOnlinePuzzles(){
+  if(!SB_OK){ state.onlinePuzzles=[]; if(state.mode==='list')render(); return; }
+  try{
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/puzzles?select=*&order=created_at.desc`,{headers:sbH()});
+    state.onlinePuzzles=r.ok?await r.json():[];
+  }catch{ state.onlinePuzzles=[]; }
+  if(state.mode==='list') render();
+}
+function setSort(s){ state.listSort=s; render(); }
+function calcDiff(p){
+  const plays=p.play_count??0; if(plays<5) return null;
+  const rate=(p.correct_count??0)/plays;
+  if(rate>0.8) return 1; if(rate>0.6) return 2; if(rate>0.35) return 3; if(rate>0.15) return 4; return 5;
+}
+function diffStars(p){
+  const d=calcDiff(p); if(d===null) return `<span style="color:var(--text3);font-size:.73rem">${L('diff_pending')}</span>`;
+  return [1,2,3,4,5].map(n=>`<span style="color:${n<=d?'var(--gold)':'var(--text3)'};font-size:.82rem">★</span>`).join('');
+}
+function getLiked(){ try{return JSON.parse(localStorage.getItem('liked_puzzles')||'[]');}catch{return[];} }
+function setLiked(arr){ localStorage.setItem('liked_puzzles',JSON.stringify(arr)); }
+async function likePuzzle(id,currentLikes){
+  const liked=getLiked(); const isLiked=liked.includes(id);
+  const entry=state.onlinePuzzles?.find(x=>x.id===id);
+  if(isLiked){
+    setLiked(liked.filter(x=>x!==id));
+    const n=Math.max(0,currentLikes-1);
+    if(entry) entry.likes=n;
+    if(SB_OK) fetch(`${SUPABASE_URL}/rest/v1/puzzles?id=eq.${id}`,{method:'PATCH',headers:sbH(),body:JSON.stringify({likes:n})}).catch(()=>{});
+  } else {
+    setLiked([...liked,id]);
+    const n=currentLikes+1;
+    if(entry) entry.likes=n;
+    if(SB_OK) fetch(`${SUPABASE_URL}/rest/v1/puzzles?id=eq.${id}`,{method:'PATCH',headers:sbH(),body:JSON.stringify({likes:n})}).catch(()=>{});
+  }
+  render();
+}
+function sortedPuzzles(){
+  const ps=[...(state.onlinePuzzles??[])];
+  const s=state.listSort;
+  if(s==='likes') ps.sort((a,b)=>(b.likes??0)-(a.likes??0));
+  else if(s==='diff_hard') ps.sort((a,b)=>(calcDiff(b)??0)-(calcDiff(a)??0));
+  else if(s==='diff_easy') ps.sort((a,b)=>(calcDiff(a)??0)-(calcDiff(b)??0));
+  else ps.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  return ps;
+}
+async function publishPuzzle(){
+  const existing=state.editingId?(state.onlinePuzzles??[]).find(p=>p.id===state.editingId):null;
+  const title=prompt(state.lang==='ja'?'パズルのタイトルを入力:':'Enter puzzle title:',existing?.title??'');
+  if(!title?.trim()) return;
+  const puzzle_data=encPuzzle(state.puzzle); if(!puzzle_data) return;
+  try{
+    if(existing){
+      await fetch(`${SUPABASE_URL}/rest/v1/puzzles?id=eq.${state.editingId}`,{method:'PATCH',headers:sbH(),body:JSON.stringify({title:title.trim(),puzzle_data})});
+      alert(L('publish_update_ok'));
+    } else {
+      await fetch(`${SUPABASE_URL}/rest/v1/puzzles`,{method:'POST',headers:{...sbH(),'Prefer':'return=minimal'},body:JSON.stringify({title:title.trim(),puzzle_data})});
+      alert(L('publish_ok'));
+    }
+    state.editingId=null; goHome();
+  }catch{ alert(L('publish_fail')); }
+}
+async function deleteSavedPuzzle(id){
+  if(!confirm(state.lang==='ja'?'このパズルを削除しますか？':'Delete this puzzle?')) return;
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/puzzles?id=eq.${id}`,{method:'DELETE',headers:sbH()});
+    state.onlinePuzzles=(state.onlinePuzzles??[]).filter(p=>p.id!==id);
+    render();
+  }catch{ alert(state.lang==='ja'?'削除に失敗しました。':'Delete failed.'); }
+}
+function getBuiltinPuzzles(){
+  // s1: A(criminal)=医者, B(honest)=弁護士, C(honest)=教師
+  // A:"Bが犯人", B:"犯人の職業は医者", C:"Aが犯人", EW:"嘘つきは1人"
+  // Unique solution: criminal=A, liars={A}
+  const s1={suspects:[
+    {name:'容疑者A',attrs:{職業:'医者'},hiddenAttrs:{},isLiar:false,firstPerson:'私',testimony:{type:'suspect_is_criminal',suspectIdx:1}},
+    {name:'容疑者B',attrs:{職業:'弁護士'},hiddenAttrs:{},isLiar:false,firstPerson:'私',testimony:{type:'criminal_has_attr',attrName:'職業',attrValue:'医者'}},
+    {name:'容疑者C',attrs:{職業:'教師'},hiddenAttrs:{},isLiar:false,firstPerson:'私',testimony:{type:'suspect_is_criminal',suspectIdx:0}},
+  ],attributes:[{name:'職業',values:['医者','弁護士','教師']}],criminalIdx:0,
+  externalWitnesses:[{name:state.lang==='ja'?'目撃者':'Witness',testimony:{type:'liar_count',count:1}}],
+  };
+  const s2={suspects:[
+    {name:'容疑者A',attrs:{},hiddenAttrs:{},isLiar:false,firstPerson:'私',testimony:{type:'suspect_is_honest',suspectIdx:2}},
+    {name:'容疑者B',attrs:{},hiddenAttrs:{},isLiar:false,firstPerson:'私',testimony:{type:'suspect_is_criminal',suspectIdx:0}},
+    {name:'容疑者C',attrs:{},hiddenAttrs:{},isLiar:true, firstPerson:'私',testimony:{type:'suspect_is_criminal',suspectIdx:1}},
+  ],attributes:[],criminalIdx:0,
+  externalWitnesses:[{name:state.lang==='ja'?'目撃者':'Witness',testimony:{type:'liar_count',count:2}}],
+  };
+  return [
+    {title:state.lang==='ja'?'チュートリアル①「図書館の謎」':'Tutorial ① Library Mystery', encoded:encPuzzle(s1)},
+    {title:state.lang==='ja'?'チュートリアル②「宝石強盗」':'Tutorial ② Jewel Heist',    encoded:encPuzzle(s2)},
+  ];
+}
+function intendedLS(puzzle){
+  const {suspects,criminalIdx}=puzzle;
+  return new Set(suspects.map((s,i)=>(s.isLiar||i===criminalIdx)?i:-1).filter(i=>i!==-1));
+}
+function consistencyStatus(t, speakerIdx, puzzle){
+  if(!t) return null;
+  const ls=intendedLS(puzzle);
+  const v=evaluate(t,puzzle.criminalIdx,ls,puzzle);
+  if(v===null) return null;
+  const isLiar=ls.has(speakerIdx);
+  return (isLiar?!v:v)?'ok':'bad';
+}
+function ewConsistencyStatus(t, puzzle){
+  if(!t) return null;
+  const ls=intendedLS(puzzle);
+  const v=evaluate(t,puzzle.criminalIdx,ls,puzzle);
+  if(v===null) return null;
+  return v?'ok':'bad';
+}
+function copyUrl(){ if(state.shareUrl) navigator.clipboard.writeText(state.shareUrl).then(()=>alert(state.lang==='ja'?'URLをコピーしました！':'Copied!')); }
+function toggleLang(){ state.lang=state.lang==='ja'?'en':'ja'; localStorage.setItem('lang',state.lang); render(); }
+function toggleGuess(idx,honest){ const c=state.solveState.suspectGuesses[idx]; state.solveState.suspectGuesses[idx]=honest?(c===true?null:true):(c===false?null:false); render(); }
+function selectSuspect(idx){ state.solveState.suspectGuess=idx; render(); }
+function submitAnswer(){
+  const g=state.solveState.suspectGuess; if(g===null) return;
+  if(g===state.puzzle.criminalIdx){
+    const liars=state.puzzle.suspects.map((s,i)=>(s.isLiar||i===state.puzzle.criminalIdx)?s.name:null).filter(Boolean);
+    state.showModal={type:'correct',name:state.puzzle.suspects[g].name,liars};
+    if(!state.solveState.hasSubmitted && state.playingId && SB_OK){
+      const entry=state.onlinePuzzles?.find(x=>x.id===state.playingId);
+      const nc=(entry?.correct_count??0)+1;
+      if(entry) entry.correct_count=nc;
+      fetch(`${SUPABASE_URL}/rest/v1/puzzles?id=eq.${state.playingId}`,{method:'PATCH',headers:sbH(),body:JSON.stringify({correct_count:nc})}).catch(()=>{});
+    }
+  } else { state.showModal={type:'wrong'}; }
+  state.solveState.hasSubmitted=true;
+  render();
+}
+function closeModal(){ state.showModal=null; document.querySelectorAll('.modal-overlay').forEach(el=>el.remove()); }
+
+// ===== RENDER =====
+function render(){
+  document.getElementById('page-title').textContent=L('title');
+  const subs={home:'',create:L('sub_create'),solve:L('sub_solve'),list:''};
+  document.getElementById('header-sub').textContent=subs[state.mode]??'';
+  document.getElementById('lang-btn').textContent=L('lang_toggle');
+  const hb=document.getElementById('home-btn');
+  if(hb){ hb.textContent='◀ '+L('home_btn_label'); hb.style.display=state.mode==='home'?'none':''; }
+  document.title=L('title');
+  let html='';
+  if(state.mode==='home') html=renderHome();
+  else if(state.mode==='list') html=renderList();
+  else if(state.mode==='create') html=renderCreator();
+  else html=renderSolver();
+  document.getElementById('app').innerHTML=html;
+  if(state.showModal){ const ov=document.createElement('div'); ov.className='modal-overlay'; ov.innerHTML=renderModal(state.showModal); ov.addEventListener('click',e=>{if(e.target===ov)closeModal();}); document.body.appendChild(ov); }
+}
+
+function renderStepIndicator(){
+  const keys=['s1','s2','s3','s4'];
+  const icons=[
+    `<svg viewBox="0 0 20 20" width="15" height="15" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="6" r="4"/><path d="M2 19C2 13 18 13 18 19Z"/></svg>`,
+    `<svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="10,1 12.1,7.2 18.6,7.2 13.3,11.1 15.3,17.3 10,13.5 4.7,17.3 6.7,11.1 1.4,7.2 7.9,7.2"/></svg>`,
+    `<svg viewBox="0 0 20 20" width="15" height="15" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="18" height="12" rx="3"/><polygon points="4,13 4,18 9,13"/></svg>`,
+    `<svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="5"/><line x1="12" y1="12" x2="18" y2="18" stroke-linecap="round"/></svg>`,
+  ];
+  return `<div class="steps">${keys.map((k,i)=>{
+    const n=i+1; const cls=state.step===n?'active':(state.step>n?'done':'');
+    const inner=cls==='done'?'✓':icons[i];
+    return `${i>0?'<div class="step-conn"></div>':''}<div class="step-item ${cls}"><div class="step-circle" onclick="setStep(${n})">${inner}</div><div class="step-label">${L(k)}</div></div>`;
+  }).join('')}</div>`;
+}
+
+function renderHome(){
+  const svgCreate=`<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:80px;height:80px"><path d="M32 6C20 6 11 15 11 26C11 35 16 42 23 46L23 52L41 52L41 46C48 42 53 35 53 26C53 15 44 6 32 6Z" stroke="currentColor" stroke-width="2.2" fill="currentColor" fill-opacity=".12"/><path d="M18 17Q22 12 31 10" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".28"/><path d="M25 40Q28 35 32 33Q36 35 39 40" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none" opacity=".72"/><line x1="23" y1="54" x2="41" y2="54" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".5"/><line x1="25" y1="58" x2="39" y2="58" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".38"/><line x1="28" y1="62" x2="36" y2="62" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity=".25"/><path d="M6 22L7.5 19L9 22L12 23.5L9 25L7.5 28L6 25L3 23.5Z" fill="currentColor" opacity=".5"/><path d="M55 13L56 11L57 13L59 14L57 15L56 17L55 15L53 14Z" fill="currentColor" opacity=".42"/><path d="M57 33L58 31L59 33L61 34L59 35L58 37L57 35L55 34Z" fill="currentColor" opacity=".32"/><circle cx="10" cy="14" r="1.5" fill="currentColor" opacity=".35"/><circle cx="54" cy="24" r="1" fill="currentColor" opacity=".3"/></svg>`;
+  const svgPlay=`<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:80px;height:80px"><circle cx="26" cy="26" r="19" stroke="currentColor" stroke-width="2.5"/><circle cx="26" cy="26" r="11" stroke="currentColor" stroke-width="1" opacity=".2"/><path d="M16 18Q26 10 36 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none" opacity=".5"/><line x1="40" y1="40" x2="59" y2="59" stroke="currentColor" stroke-width="4.5" stroke-linecap="round"/><text x="26" y="33" text-anchor="middle" font-size="16" fill="currentColor" font-family="Georgia,serif" opacity=".72">?</text></svg>`;
+  return `<div class="home-grid">
+    <div class="home-card" onclick="goCreate()">
+      <div class="hc-bt"></div>
+      <div class="hc-illus">${svgCreate}</div>
+      <h2>${L('home_create_title')}</h2>
+      <p>${L('home_create_desc')}</p>
+    </div>
+    <div class="home-card" onclick="goList()">
+      <div class="hc-bt"></div>
+      <div class="hc-illus">${svgPlay}</div>
+      <h2>${L('home_play_title')}</h2>
+      <p>${L('home_play_desc')}</p>
+    </div>
+  </div>`;
+}
+
+function renderList(){
+  const builtins=getBuiltinPuzzles();
+  const builtinHtml=builtins.map((p,i)=>
+    `<div class="pzl-item builtin"><div style="flex:1"><div class="pzl-title">${H(p.title)}</div></div><button class="btn btn-gold" onclick="playBuiltin(${i})">${L('list_play')}</button></div>`
+  ).join('');
+  const s=state.listSort;
+  const sortBar=`<div class="sort-bar">
+    <button class="sort-btn ${(!s||s==='new')?'active':''}" onclick="setSort('new')">${L('sort_new')}</button>
+    <button class="sort-btn ${s==='likes'?'active':''}" onclick="setSort('likes')">${L('sort_likes')}</button>
+    <button class="sort-btn ${s==='diff_hard'?'active':''}" onclick="setSort('diff_hard')">${L('sort_diff_hard')}</button>
+    <button class="sort-btn ${s==='diff_easy'?'active':''}" onclick="setSort('diff_easy')">${L('sort_diff_easy')}</button>
+  </div>`;
+  let onlineHtml='';
+  if(state.onlinePuzzles===null){
+    onlineHtml=`<p class="hint" style="padding:12px 0;color:var(--text3)">${L('loading')}</p>`;
+  } else if(!state.onlinePuzzles.length){
+    onlineHtml=`<p class="hint" style="padding:12px 0;color:var(--text3)">${L('list_empty')}</p>`;
+  } else {
+    const liked=getLiked();
+    onlineHtml=sortedPuzzles().map(p=>{
+      const dt=p.created_at?new Date(p.created_at).toLocaleDateString(state.lang==='ja'?'ja-JP':'en-US'):'';
+      const stars=diffStars(p);
+      const isLiked=liked.includes(p.id);
+      const likeCount=p.likes??0;
+      const plays=p.play_count??0;
+      return `<div class="pzl-item">
+        <div style="flex:1;min-width:0">
+          <div class="pzl-title">${H(p.title)}</div>
+          <div class="pzl-meta">${stars}<span>❤ ${likeCount}</span><span>${plays}${L('plays_unit')}</span>${dt?`<span>${dt}</span>`:''}</div>
+        </div>
+        <button class="like-btn ${isLiked?'liked':''}" onclick="likePuzzle('${p.id}',${likeCount})">❤ ${likeCount}</button>
+        <button class="btn btn-gold" onclick="playSaved('${p.id}')">${L('list_play')}</button>
+        <button class="btn btn-outline" style="font-size:.78rem" onclick="editSavedPuzzle('${p.id}')">${L('edit_btn')}</button>
+        <button class="btn btn-danger" onclick="deleteSavedPuzzle('${p.id}')">${L('list_delete')}</button>
+      </div>`;
+    }).join('');
+  }
+  return `<div class="card"><div class="card-title">${L('list_title')}</div>
+    <div class="section-label">${L('list_builtin')}</div>${builtinHtml}
+    <div class="section-label">${L('list_online')}</div>${sortBar}${onlineHtml}
+    <div class="mt20"><button class="btn btn-outline" onclick="goHome()">${L('list_back')}</button></div>
+  </div>`;
+}
+
+function renderCreator(){
+  let b='';
+  if(state.step===1) b=renderStep1();
+  else if(state.step===2) b=renderStep2();
+  else if(state.step===3) b=renderStep3();
+  else b=renderStep4();
+  return renderStepIndicator()+b;
+}
+
+function renderStep1(){
+  const {suspects,attributes}=state.puzzle;
+  const showFP=state.lang==='ja';
+  const aHdrs=attributes.map(a=>`<th>${H(a.name)} <button class="btn btn-danger" onclick="delAttr('${A(a.name)}')">×</button></th>`).join('');
+  const fpHdr=showFP?`<th>${L('col_fp')}</th>`:'';
+  const rows=suspects.map((s,i)=>{
+    const cells=attributes.map(a=>{
+      const hidden=(s.hiddenAttrs??{})[a.name]??false;
+      const visCls=hidden?'off':'on';
+      const visLabel=hidden?L('attr_hid'):L('attr_vis');
+      return `<td style="white-space:nowrap"><select onchange="updSAttr(${i},'${A(a.name)}',this.value)">${a.values.map(v=>`<option ${s.attrs[a.name]===v?'selected':''}>${H(v)}</option>`).join('')}</select><button class="vis-btn ${visCls}" onclick="updSAttrVis(${i},'${A(a.name)}')">${visLabel}</button></td>`;
+    }).join('');
+    const fpCell=showFP?`<td><input type="text" value="${H(s.firstPerson??'私')}" onchange="updSFP(${i},this.value)" style="width:56px;text-align:center"/></td>`:'';
+    return `<tr><td><input type="text" value="${H(s.name)}" onchange="updSName(${i},this.value)" style="width:130px;max-width:100%"/></td>${fpCell}${cells}<td>${suspects.length>2?`<button class="btn btn-danger" onclick="delSuspect(${i})">${L('del')}</button>`:''}</td></tr>`;
+  }).join('');
+  return `<div class="card"><div class="card-title">${L('s1_title')}</div>
+    <div style="margin-bottom:20px">
+      <label style="font-size:.75rem;font-weight:600;letter-spacing:.08em;color:var(--text2);text-transform:uppercase;display:block;margin-bottom:6px">${L('case_name_label')}</label>
+      <input type="text" value="${H(state.puzzle.caseName??'')}" placeholder="${L('case_name_placeholder')}" onchange="updCaseName(this.value)" style="width:100%;max-width:420px"/>
+    </div>
+    <div class="tbl-wrap"><table><thead><tr><th>${L('col_name')}</th>${fpHdr}${aHdrs}<th></th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="row mt12"><button class="btn btn-ghost" onclick="addSuspect()">${L('add_suspect')}</button><button class="btn btn-ghost" onclick="addAttr()">${L('add_attr')}</button></div>
+    <div class="row mt20"><button class="btn btn-outline" onclick="goHome()">${L('back_home')}</button><button class="btn btn-gold" onclick="setStep(2)">${L('next')}</button></div>
+  </div>`;
+}
+
+function renderStep2(){
+  const {suspects,attributes,criminalIdx}=state.puzzle;
+  const cards=suspects.map((s,i)=>{
+    const al=attributes.map(a=>`${H(a.name)}: ${H(s.attrs[a.name]??'—')}`).join('<br>');
+    return `<div class="sus-card ${criminalIdx===i?'sel':''}" onclick="setCriminal(${i})"><div class="sname">${H(s.name)}</div><div class="sattrs">${al||'—'}</div>${criminalIdx===i?`<div class="sbadge"><span class="badge badge-criminal">${L('criminal_badge')}</span></div>`:''}</div>`;
+  }).join('');
+  return `<div class="card"><div class="card-title">${L('s2_title')}</div>
+    <p class="hint" style="margin-bottom:18px">${L('s2_hint')}</p>
+    <div class="suspect-grid">${cards}</div>
+    <div class="row mt20"><button class="btn btn-outline" onclick="setStep(1)">${L('prev')}</button><button class="btn btn-gold" onclick="setStep(3)">${L('next')}</button></div>
+  </div>`;
+}
+
+function renderStep3(){
+  const {suspects,attributes,criminalIdx,externalWitnesses}=state.puzzle;
+  const tSelect=(onc,t)=>`<select onchange="${onc}">
+    <option value="">${L('select_type')}</option>
+    <option value="suspect_is_criminal" ${t?.type==='suspect_is_criminal'?'selected':''}>${L('t_is_crim')}</option>
+    <option value="suspect_not_criminal" ${t?.type==='suspect_not_criminal'?'selected':''}>${L('t_not_crim')}</option>
+    <option value="criminal_has_attr" ${t?.type==='criminal_has_attr'?'selected':''} ${!attributes.length?'disabled':''}>${L('t_crim_attr')}</option>
+    <option value="suspect_has_attr" ${t?.type==='suspect_has_attr'?'selected':''} ${!attributes.length?'disabled':''}>${L('t_sus_attr')}</option>
+    <option value="suspect_is_honest" ${t?.type==='suspect_is_honest'?'selected':''}>${L('t_is_honest')}</option>
+    <option value="suspect_is_liar" ${t?.type==='suspect_is_liar'?'selected':''}>${L('t_is_liar')}</option>
+    <option value="liar_count" ${t?.type==='liar_count'?'selected':''}>${L('t_count')}</option>
+    <option value="liar_parity" ${t?.type==='liar_parity'?'selected':''}>${L('t_liar_parity')}</option>
+    <option value="liar_at_least" ${t?.type==='liar_at_least'?'selected':''}>${L('t_liar_at_least')}</option>
+    <option value="liar_at_most" ${t?.type==='liar_at_most'?'selected':''}>${L('t_liar_at_most')}</option>
+    <option value="honest_count" ${t?.type==='honest_count'?'selected':''}>${L('t_honest_count')}</option>
+    <option value="attr_is_honest" ${t?.type==='attr_is_honest'?'selected':''} ${!attributes.length?'disabled':''}>${L('t_attr_honest')}</option>
+    <option value="attr_is_liar" ${t?.type==='attr_is_liar'?'selected':''} ${!attributes.length?'disabled':''}>${L('t_attr_liar')}</option>
+    <option value="culprit_same_attr" ${t?.type==='culprit_same_attr'?'selected':''} ${!attributes.length?'disabled':''}>${L('t_culprit_same_attr')}</option>
+    <option value="flavor" ${t?.type==='flavor'?'selected':''}>${L('t_flavor')}</option>
+  </select>`;
+
+  const tParams=(t,pre)=>{
+    if(!t?.type) return '';
+    const ss=v=>`<select onchange="${pre}'suspectIdx',this.value)">${suspects.map((s,i)=>`<option value="${i}" ${v===i?'selected':''}>${H(s.name)}</option>`).join('')}</select>`;
+    const as=an=>`<select onchange="${pre}'attrName',this.value)">${attributes.map(a=>`<option value="${H(a.name)}" ${an===a.name?'selected':''}>${H(a.name)}</option>`).join('')}</select>`;
+    const vs=(an,av)=>{ const a=attributes.find(x=>x.name===an); return `<select onchange="${pre}'attrValue',this.value)">${(a?.values??[]).map(v=>`<option ${av===v?'selected':''}>${H(v)}</option>`).join('')}</select>`; };
+    switch(t.type){
+      case 'suspect_is_criminal': case 'suspect_not_criminal': case 'suspect_is_honest': case 'suspect_is_liar': return ss(t.suspectIdx);
+      case 'criminal_has_attr': return as(t.attrName)+vs(t.attrName,t.attrValue);
+      case 'suspect_has_attr': return ss(t.suspectIdx)+as(t.attrName)+vs(t.attrName,t.attrValue);
+      case 'liar_count': return `<input type="number" min="0" max="${suspects.length}" value="${t.count??1}" style="width:60px" onchange="${pre}'count',this.value)"/> ${L('liar_unit')}`;
+      case 'liar_at_least':
+      case 'liar_at_most': return `<input type="number" min="0" max="${suspects.length}" value="${t.count??1}" style="width:60px" onchange="${pre}'count',this.value)"/> ${L('liar_unit')}`;
+      case 'liar_parity': return `<select onchange="${pre}'isEven',this.value)"><option value="true" ${t.isEven!==false?'selected':''}>${L('parity_even')}</option><option value="false" ${t.isEven===false?'selected':''}>${L('parity_odd')}</option></select>`;
+      case 'honest_count': return `<input type="number" min="0" max="${suspects.length}" value="${t.count??1}" style="width:60px" onchange="${pre}'count',this.value)"/> ${L('honest_unit')}`;
+      case 'attr_is_honest':
+      case 'attr_is_liar': return as(t.attrName)+vs(t.attrName,t.attrValue);
+      case 'culprit_same_attr': return ss(t.suspectIdx)+as(t.attrName);
+      case 'flavor': return `<input type="text" value="${H(t.text??'')}" placeholder="${L('flavor_placeholder')}" onchange="${pre}'text',this.value)" style="flex:1;min-width:200px"/>`;
+      default: return '';
+    }
+  };
+
+  const csTag=cs=>cs==='ok'?`<span class="consist-ok">${L('consist_ok')}</span>`:cs==='bad'?`<span class="consist-bad">${L('consist_bad')}</span>`:'';
+
+  const suspCards=suspects.map((s,i)=>{
+    const isCrim=i===criminalIdx; const t=s.testimony;
+    const isFlavor=t?.type==='flavor';
+    const cs=isFlavor?null:consistencyStatus(t,i,state.puzzle);
+    const badge=isCrim
+      ?`<span class="badge badge-criminal">${L('criminal_badge')}</span> <span class="badge badge-liar">${L('fixed_liar')}</span>`
+      :`<div class="toggle"><button class="tgl honest ${!s.isLiar?'on':''}" onclick="setSLiar(${i},false)">${L('honest_btn')}</button><button class="tgl liar ${s.isLiar?'on':''}" onclick="setSLiar(${i},true)">${L('liar_btn')}</button></div>`;
+    const preview=t
+      ?isFlavor
+        ?`<div class="t-preview" style="color:var(--text2)">「${H(t.text??'')}」</div>`
+        :`<div class="t-preview">「${H(getSentence(t,state.puzzle,i))}」${csTag(cs)}</div>`
+      :'';
+    const callnamesSection=suspects.length>1?`<div class="callnames-row"><span class="callnames-label">${L('callnames_label')}</span>${suspects.map((other,j)=>j===i?'':`<label class="callname-item">${H(other.name)}<input type="text" value="${H((s.callNames??{})[j]??'')}" placeholder="${H(other.name)}" onchange="updSCallNameFor(${i},${j},this.value)" style="width:72px"/></label>`).join('')}</div>`:''
+    return `<div class="t-card ${isCrim?'criminal':''}${isFlavor?' flavor':''}">
+      <div class="t-header"><span style="font-weight:600;font-size:.95rem">${H(s.name)}</span>${badge}</div>
+      <div class="t-row">${tSelect(`updSTType(${i},this.value)`,t)}${t?tParams(t,`updSTParam(${i},`):''}</div>
+      ${preview}${callnamesSection}</div>`;
+  }).join('');
+
+  const extCards=externalWitnesses.map((ew,i)=>{
+    const t=ew.testimony;
+    const cs=ewConsistencyStatus(t,state.puzzle);
+    return `<div class="t-card external">
+      <div class="t-header"><input type="text" value="${H(ew.name)}" onchange="updEWName(${i},this.value)" style="width:150px;max-width:100%"/><span class="badge badge-external">${L('always_honest')}</span><button class="btn btn-danger" onclick="delEW(${i})">×</button></div>
+      <div class="t-row">${tSelect(`updEWTType(${i},this.value)`,t)}${t?tParams(t,`updEWTParam(${i},`):''}</div>
+      ${t?`<div class="t-preview green">「${H(getSentence(t,state.puzzle))}」${csTag(cs)}</div>`:''}</div>`;
+  }).join('');
+
+  return `<div class="card"><div class="card-title">${L('s3_title')}</div>
+    <p class="hint" style="margin-bottom:4px">${L('s3_hint')}</p>
+    <div class="section-label">${L('sec_suspect')}</div>${suspCards}
+    <div class="section-label">${L('sec_ext')}</div>
+    <p class="hint" style="margin-bottom:12px">${L('sec_ext_hint')}</p>${extCards}
+    <button class="btn btn-ghost" onclick="addEW()">${L('add_ext')}</button>
+    <div class="row mt20"><button class="btn btn-outline" onclick="setStep(2)">${L('prev')}</button><button class="btn btn-gold" onclick="setStep(4)">${L('next')}</button></div>
+  </div>`;
+}
+
+function renderStep4(){
+  const r=state.verifyResult; let vHtml='';
+  if(r!==null){
+    if(r.length===0){
+      vHtml=`<div class="vresult warn"><strong>${L('v_warn')}</strong>${L('v_warn_msg')}</div>`;
+    } else if(r.length===1&&r[0].isIntended){
+      const isEditing=!!state.editingId;
+      vHtml=`<div class="vresult ok"><strong>${L('v_ok')}</strong>${L('v_ok_msg')}</div>
+      <div class="publish-section">
+        <p style="font-size:.84rem;color:var(--text2);margin-bottom:16px">${L('publish_auto_diff_note')}</p>
+        <button class="btn btn-gold" style="font-size:1rem;padding:10px 32px" onclick="publishPuzzle()">🌐 ${isEditing?L('update_btn'):L('publish_btn')}</button>
+      </div>`;
+    } else {
+      const alts=r.map(s=>`・${L('v_criminal')}: ${H(s.criminalName)}　${L('v_liars')}: ${s.liarNames.length?s.liarNames.map(H).join('・'):L('v_none')}${s.isIntended?' '+L('v_intended'):''}`).join('<br>');
+      vHtml=`<div class="vresult bad"><strong>${L('v_bad')}（${r.length}）</strong>${alts}<br><br>${L('v_bad_hint')}</div>`;
+    }
+  }
+  return `<div class="card"><div class="card-title">${L('s4_title')}</div>
+    <p class="hint" style="margin-bottom:18px">${L('s4_hint')}</p>
+    <button class="btn btn-gold" onclick="doVerify()">${L('verify_btn')}</button>
+    ${vHtml}
+    <div class="row mt20"><button class="btn btn-outline" onclick="setStep(3)">${L('prev')}</button><button class="btn btn-gold" onclick="goHome()">${L('finish_btn')}</button></div>
+  </div>`;
+}
+
+function renderSolver(){
+  const {suspects,attributes,externalWitnesses}=state.puzzle;
+  const solve=state.solveState;
+  const caseBanner=state.puzzle.caseName?`<div class="case-banner"><span class="case-banner-label">― CASE ―</span><span class="case-banner-name">${H(state.puzzle.caseName)}</span></div>`:'';
+  const rules=`<div class="rule-box"><h3>${L('rules_title')}</h3><ul><li>${L('rule1')}</li><li>${L('rule2')}</li><li>${L('rule3')}</li></ul></div>`;
+  const aH=attributes.map(a=>`<th>${H(a.name)}</th>`).join('');
+  const sRows=suspects.map(s=>`<tr><td>${H(s.name)}</td>${attributes.map(a=>`<td>${(s.hiddenAttrs??{})[a.name]?`<span style="color:var(--text3)">？</span>`:H(s.attrs[a.name]??'？')}</td>`).join('')}</tr>`).join('');
+  const suspT=suspects.map((s,i)=>{
+    const gH=solve.suspectGuesses[i]===true; const gL=solve.suspectGuesses[i]===false;
+    const quote=s.testimony?`<span class="quote">「${H(getSentence(s.testimony,state.puzzle,i))}」</span>`:'';
+    return `<div class="solve-t"><div><span class="speaker">${H(s.name)}</span>${quote}</div><div class="guess-btns"><button class="g-btn honest ${gH?'on':''}" onclick="toggleGuess(${i},true)">${L('honest_btn')}</button><button class="g-btn liar ${gL?'on':''}" onclick="toggleGuess(${i},false)">${L('liar_btn')}</button></div></div>`;
+  }).join('');
+  const extT=externalWitnesses.filter(ew=>ew.testimony).map(ew=>
+    `<div class="solve-t external"><div><span class="speaker">${H(ew.name)}</span><span class="quote">「${H(getSentence(ew.testimony,state.puzzle))}」</span> <span class="badge badge-external" style="font-size:.68rem">${L('always_honest')}</span></div></div>`
+  ).join('');
+  const hasT=suspT||extT;
+  const testCard=hasT?`<div class="card"><div class="card-title">${L('test_title')}</div><p class="hint" style="margin-bottom:16px">${L('test_hint')}</p>${suspT}${extT}</div>`:'';
+  const ansCards=suspects.map((s,i)=>{ const al=attributes.map(a=>`${H(a.name)}: ${(s.hiddenAttrs??{})[a.name]?'？':H(s.attrs[a.name]??'？')}`).join('<br>'); return `<div class="sus-card ${solve.suspectGuess===i?'sel':''}" onclick="selectSuspect(${i})"><div class="sname">${H(s.name)}</div><div class="sattrs">${al||'—'}</div></div>`; }).join('');
+  return `${caseBanner}${rules}<div class="card"><div class="card-title">${L('sus_title')}</div><div class="tbl-wrap"><table><thead><tr><th>${L('col_name')}</th>${aH}</tr></thead><tbody>${sRows}</tbody></table></div></div>${testCard}<div class="card"><div class="card-title">${L('ans_title')}</div><div class="suspect-grid">${ansCards}</div><div class="answer-ctr"><button class="btn btn-gold" style="font-size:1rem;padding:12px 32px" onclick="submitAnswer()" ${solve.suspectGuess===null?'disabled':''}>${L('submit_btn')}</button></div><div style="margin-top:16px;text-align:center"><button class="btn btn-outline" onclick="goHome()">${L('back_home')}</button></div></div>`;
+}
+
+function renderModal(m){
+  if(m.type==='correct'){
+    const liars=m.liars.length?m.liars.map(H).join('・'):L('v_none');
+    return `<div class="modal correct"><h2>${L('correct_title')}</h2><p>${L('correct_msg')(H(m.name),liars)}</p><div style="display:flex;flex-direction:column;gap:10px"><button class="btn btn-gold" style="width:100%" onclick="closeModal()">${L('close_btn')}</button><button class="btn btn-outline" style="width:100%" onclick="closeModal();goHome()">${L('back_home')}</button></div></div>`;
+  }
+  return `<div class="modal wrong"><h2>${L('wrong_title')}</h2><p>${L('wrong_msg')}</p><div style="display:flex;flex-direction:column;gap:10px"><button class="btn btn-outline" style="width:100%" onclick="closeModal()">${L('retry_btn')}</button><button class="btn btn-outline" style="width:100%" onclick="closeModal();goHome()">${L('back_home')}</button></div></div>`;
+}
+
+function H(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function A(s){return String(s??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
+
+function init(){
+  const params=new URLSearchParams(location.search);
+  if(params.has('puzzle')){
+    const p=decPuzzle(params.get('puzzle'));
+    if(p) startSolve(p);
+  }
+  render();
+}
+init();
+</script>
+</body>
+</html>
