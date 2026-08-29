@@ -1016,8 +1016,11 @@ function renderSolver(){
   const sRows=suspects.map(s=>`<tr><td>${H(s.name)}</td>${attributes.map(a=>`<td>${(s.hiddenAttrs??{})[a.name]?`<span style="color:var(--text3)">？</span>`:H(s.attrs[a.name]??'？')}</td>`).join('')}</tr>`).join('');
   const suspT=suspects.map((s,i)=>{
     const gH=solve.suspectGuesses[i]===true; const gL=solve.suspectGuesses[i]===false;
-    const quote=s.testimony?`<span class="quote">「${H(getSentence(s.testimony,state.puzzle,i))}」</span>`:'';
-    return `<div class="solve-t"><div><span class="speaker">${H(s.name)}</span>${quote}</div><div class="guess-btns"><button class="g-btn honest ${gH?'on':''}" onclick="toggleGuess(${i},true)">${L('honest_btn')}</button><button class="g-btn liar ${gL?'on':''}" onclick="toggleGuess(${i},false)">${L('liar_btn')}</button></div></div>`;
+    const isFlavor=s.testimony?.type==='flavor';
+    const flavorNote=isFlavor?`<span style="font-size:.7rem;color:var(--text3);margin-left:8px">(${state.lang==='ja'?'論理に影響しない発言':'no logical effect'})</span>`:'';
+    const quote=s.testimony?`<span class="quote">「${H(getSentence(s.testimony,state.puzzle,i))}」</span>${flavorNote}`:'';
+    const btns=isFlavor?'':`<div class="guess-btns"><button class="g-btn honest ${gH?'on':''}" onclick="toggleGuess(${i},true)">${L('honest_btn')}</button><button class="g-btn liar ${gL?'on':''}" onclick="toggleGuess(${i},false)">${L('liar_btn')}</button></div>`;
+    return `<div class="solve-t${isFlavor?' flavor':''}"><div><span class="speaker">${H(s.name)}</span>${quote}</div>${btns}</div>`;
   }).join('');
   const extT=externalWitnesses.filter(ew=>ew.testimony).map(ew=>
     `<div class="solve-t external"><div><span class="speaker">${H(ew.name)}</span><span class="quote">「${H(getSentence(ew.testimony,state.puzzle))}」</span> <span class="badge badge-external" style="font-size:.68rem">${L('always_honest')}</span></div></div>`
