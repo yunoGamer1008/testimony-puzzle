@@ -300,7 +300,7 @@ const I18N = {
     s1:'容疑者・属性', s2:'犯人設定', s3:'証言設定', s4:'検証・共有',
     s1_title:'容疑者・属性の設定', col_name:'名前', col_fp:'一人称', col_callname:'呼び名', add_suspect:'＋ 容疑者を追加', add_attr:'＋ 属性を追加', del:'削除', next:'次へ →', prev:'← 戻る',
     case_name_label:'事件名', case_name_placeholder:'例：図書館の密室事件',
-    s2_title:'犯人を設定', s2_hint:'犯人は必ず嘘をつきます。プレイヤーには見えません。', criminal_badge:'★ 犯人',
+    s2_title:'犯人を設定', s2_hint:'プレイヤーには見えません。正直者か嘘つきかは次のステップで設定します。', criminal_badge:'★ 犯人',
     s3_title:'証言の設定', s3_hint:'嘘つきの発言は論理的に逆の意味で評価されます', callnames_label:'呼び名：',
     sec_suspect:'容疑者の証言', sec_ext:'外部証人（常に正直）', sec_ext_hint:'容疑者以外の人物。証言は必ず本当です。',
     sec_flavor:'フレーバー発言（論理に影響しない）', sec_flavor_hint:'雰囲気づくりの自由記述。解答の判定には使われません。',
@@ -321,7 +321,7 @@ const I18N = {
     v_warn:'矛盾あり', v_warn_msg:'どの組み合わせも成立しません。証言を見直してください。',
     v_bad:'✗ 別解あり', v_intended:'← 設定した解', v_bad_hint:'証言を追加・変更して別解を排除してください。',
     v_criminal:'犯人', v_liars:'嘘つき', v_none:'なし',
-    rules_title:'GAME RULES', rule1:'犯人は必ず嘘をついています', rule2:'外部証人の証言は必ず本当です', rule3:'それ以外の人物が正直かどうかは不明です',
+    rules_title:'GAME RULES', rule1:'嘘つきの証言は論理的に逆の意味で評価されます', rule2:'外部証人の証言は必ず本当です', rule3:'各容疑者が正直者か嘘つきかは不明です',
     sus_title:'容疑者一覧', test_title:'証言', test_hint:'右のボタンで正直/嘘つきのメモができます（任意）',
     ans_title:'犯人を指定せよ', submit_btn:'答えを送信', honest_btn:'正直', liar_btn:'嘘つき',
     correct_title:'正解', wrong_title:'不正解',
@@ -351,7 +351,7 @@ const I18N = {
     s1:'Suspects & Traits', s2:'Set Culprit', s3:'Testimonies', s4:'Verify & Share',
     s1_title:'Suspects & Traits', col_name:'Name', col_fp:null, col_callname:'Alias', add_suspect:'+ Add Suspect', add_attr:'+ Add Trait', del:'Remove', next:'Next →', prev:'← Back',
     case_name_label:'Case Name', case_name_placeholder:'e.g. The Library Mystery',
-    s2_title:'Set the Culprit', s2_hint:'The culprit always lies. Hidden from players.', criminal_badge:'★ Culprit',
+    s2_title:'Set the Culprit', s2_hint:'Hidden from players. Set their honesty in the next step.', criminal_badge:'★ Culprit',
     s3_title:'Set Testimonies', s3_hint:"Liars' statements are evaluated as logically false.", callnames_label:'Aliases:',
     sec_suspect:'Suspect Testimonies', sec_ext:'External Witnesses (always truthful)', sec_ext_hint:'People outside the suspect list. Their testimony is always true.',
     sec_flavor:'Flavor Statements (no logical effect)', sec_flavor_hint:'Atmospheric free text. Not used in answer verification.',
@@ -372,7 +372,7 @@ const I18N = {
     v_warn:'Contradiction', v_warn_msg:'No valid combination found. Please review the testimonies.',
     v_bad:'✗ Multiple Solutions', v_intended:'← your intended solution', v_bad_hint:'Add or change testimonies to eliminate alternate solutions.',
     v_criminal:'Culprit', v_liars:'Liars', v_none:'none',
-    rules_title:'GAME RULES', rule1:'The culprit always lies.', rule2:'External witnesses always tell the truth.', rule3:'All other suspects may be honest or lying.',
+    rules_title:'GAME RULES', rule1:"Liars' statements are evaluated as logically false.", rule2:'External witnesses always tell the truth.', rule3:'Whether each suspect is honest or lying is unknown.',
     sus_title:'Suspects', test_title:'Testimonies', test_hint:'Use the buttons to note who you think is honest or lying (optional).',
     ans_title:'Who Is the Culprit?', submit_btn:'Submit Answer', honest_btn:'Honest', liar_btn:'Liar',
     correct_title:'Correct!', wrong_title:'Wrong',
@@ -494,8 +494,8 @@ function evaluate(t, cIdx, liarSet, puzzle){
     case 'liar_at_most':      return liarSet.size <= t.count;
     case 'culprit_same_attr': { const ca=suspects[cIdx]?.attrs[t.attrName]; const sa=suspects[t.suspectIdx]?.attrs[t.attrName]; if(ca===undefined||sa===undefined) return null; return ca===sa; }
     case 'honest_count':      return (suspects.length - liarSet.size) === t.count;
-    case 'attr_is_honest':    { const idx=suspects.findIndex(s=>s.attrs[t.attrName]===t.attrValue); if(idx===-1) return null; return !liarSet.has(idx); }
-    case 'attr_is_liar':      { const idx=suspects.findIndex(s=>s.attrs[t.attrName]===t.attrValue); if(idx===-1) return null; return liarSet.has(idx); }
+    case 'attr_is_honest':    { const idxs=suspects.map((s,i)=>s.attrs[t.attrName]===t.attrValue?i:-1).filter(i=>i!==-1); if(!idxs.length) return null; return idxs.every(i=>!liarSet.has(i)); }
+    case 'attr_is_liar':      { const idxs=suspects.map((s,i)=>s.attrs[t.attrName]===t.attrValue?i:-1).filter(i=>i!==-1); if(!idxs.length) return null; return idxs.every(i=>liarSet.has(i)); }
     default: return null;
   }
 }
@@ -503,7 +503,7 @@ function evaluate(t, cIdx, liarSet, puzzle){
 function verifyPuzzle(puzzle){
   const {suspects,criminalIdx,externalWitnesses} = puzzle;
   const n = suspects.length;
-  const intendedLS = new Set(suspects.map((s,i)=>(s.isLiar||i===criminalIdx)?i:-1).filter(i=>i!==-1));
+  const intendedLS = new Set(suspects.map((s,i)=>s.isLiar?i:-1).filter(i=>i!==-1));
   const suspWithT = suspects.map((s,i)=>({...s,idx:i})).filter(s=>s.testimony);
   const extWithT  = externalWitnesses.filter(ew=>ew.testimony);
   const solutions = [];
@@ -511,7 +511,7 @@ function verifyPuzzle(puzzle){
     for(let bits=0;bits<(1<<n);bits++){
       const ls = new Set();
       for(let i=0;i<n;i++) if(bits&(1<<i)) ls.add(i);
-      if(!ls.has(cIdx)) continue;
+      // no constraint: culprit can be honest or liar
       let ok=true;
       for(const s of suspWithT){
         const v=evaluate(s.testimony,cIdx,ls,puzzle);
@@ -688,14 +688,14 @@ function getBuiltinPuzzles(){
   // A:"Bが犯人", B:"犯人の職業は医者", C:"Aが犯人", EW:"嘘つきは1人"
   // Unique solution: criminal=A, liars={A}
   const s1={suspects:[
-    {name:'容疑者A',attrs:{職業:'医者'},hiddenAttrs:{},isLiar:false,firstPerson:'私',testimony:{type:'suspect_is_criminal',suspectIdx:1}},
+    {name:'容疑者A',attrs:{職業:'医者'},hiddenAttrs:{},isLiar:true,firstPerson:'私',testimony:{type:'suspect_is_criminal',suspectIdx:1}},
     {name:'容疑者B',attrs:{職業:'弁護士'},hiddenAttrs:{},isLiar:false,firstPerson:'私',testimony:{type:'criminal_has_attr',attrName:'職業',attrValue:'医者'}},
     {name:'容疑者C',attrs:{職業:'教師'},hiddenAttrs:{},isLiar:false,firstPerson:'私',testimony:{type:'suspect_is_criminal',suspectIdx:0}},
   ],attributes:[{name:'職業',values:['医者','弁護士','教師']}],criminalIdx:0,
   externalWitnesses:[{name:state.lang==='ja'?'目撃者':'Witness',testimony:{type:'liar_count',count:1}}],
   };
   const s2={suspects:[
-    {name:'容疑者A',attrs:{},hiddenAttrs:{},isLiar:false,firstPerson:'私',testimony:{type:'suspect_is_honest',suspectIdx:2}},
+    {name:'容疑者A',attrs:{},hiddenAttrs:{},isLiar:true,firstPerson:'私',testimony:{type:'suspect_is_honest',suspectIdx:2}},
     {name:'容疑者B',attrs:{},hiddenAttrs:{},isLiar:false,firstPerson:'私',testimony:{type:'suspect_is_criminal',suspectIdx:0}},
     {name:'容疑者C',attrs:{},hiddenAttrs:{},isLiar:true, firstPerson:'私',testimony:{type:'suspect_is_criminal',suspectIdx:1}},
   ],attributes:[],criminalIdx:0,
@@ -707,8 +707,8 @@ function getBuiltinPuzzles(){
   ];
 }
 function intendedLS(puzzle){
-  const {suspects,criminalIdx}=puzzle;
-  return new Set(suspects.map((s,i)=>(s.isLiar||i===criminalIdx)?i:-1).filter(i=>i!==-1));
+  const {suspects}=puzzle;
+  return new Set(suspects.map((s,i)=>s.isLiar?i:-1).filter(i=>i!==-1));
 }
 function consistencyStatus(t, speakerIdx, puzzle){
   if(!t) return null;
@@ -732,7 +732,7 @@ function selectSuspect(idx){ state.solveState.suspectGuess=idx; render(); }
 function submitAnswer(){
   const g=state.solveState.suspectGuess; if(g===null) return;
   if(g===state.puzzle.criminalIdx){
-    const liars=state.puzzle.suspects.map((s,i)=>(s.isLiar||i===state.puzzle.criminalIdx)?s.name:null).filter(Boolean);
+    const liars=state.puzzle.suspects.map(s=>s.isLiar?s.name:null).filter(Boolean);
     state.showModal={type:'correct',name:state.puzzle.suspects[g].name,liars};
     if(!state.solveState.hasSubmitted && state.playingId && SB_OK){
       const entry=state.onlinePuzzles?.find(x=>x.id===state.playingId);
@@ -939,9 +939,7 @@ function renderStep3(){
     const isCrim=i===criminalIdx; const t=s.testimony;
     const isFlavor=t?.type==='flavor';
     const cs=isFlavor?null:consistencyStatus(t,i,state.puzzle);
-    const badge=isCrim
-      ?`<span class="badge badge-criminal">${L('criminal_badge')}</span> <span class="badge badge-liar">${L('fixed_liar')}</span>`
-      :`<div class="toggle"><button class="tgl honest ${!s.isLiar?'on':''}" onclick="setSLiar(${i},false)">${L('honest_btn')}</button><button class="tgl liar ${s.isLiar?'on':''}" onclick="setSLiar(${i},true)">${L('liar_btn')}</button></div>`;
+    const badge=`${isCrim?`<span class="badge badge-criminal">${L('criminal_badge')}</span> `:''}<div class="toggle"><button class="tgl honest ${!s.isLiar?'on':''}" onclick="setSLiar(${i},false)">${L('honest_btn')}</button><button class="tgl liar ${s.isLiar?'on':''}" onclick="setSLiar(${i},true)">${L('liar_btn')}</button></div>`;
     const preview=t
       ?isFlavor
         ?`<div class="t-preview" style="color:var(--text2)">「${H(t.text??'')}」</div>`
