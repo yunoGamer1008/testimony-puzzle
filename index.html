@@ -312,6 +312,7 @@ const I18N = {
     t_liar_parity:'嘘つきの人数は偶数/奇数だ', t_honest_count:'正直者は〇〇人だ',
     t_liar_at_least:'嘘つきは〇〇人以上だ', t_liar_at_most:'嘘つきは〇〇人以下だ',
     t_attr_honest:'〇〇が〇〇な人は正直者だ', t_attr_liar:'〇〇が〇〇な人は嘘つきだ',
+    t_culprit_honest:'犯人は正直者だ', t_culprit_liar:'犯人は嘘つきだ',
     t_culprit_same_attr:'犯人は〇〇と同じ〇〇だ',
     t_flavor:'その他（推理には影響しません）',
     liar_unit:'人', honest_unit:'人', parity_even:'偶数', parity_odd:'奇数', consist_ok:'✓ 整合', consist_bad:'✗ 矛盾',
@@ -363,6 +364,7 @@ const I18N = {
     t_liar_parity:'The number of liars is even/odd', t_honest_count:'There are 〇〇 honest people',
     t_liar_at_least:'There are at least 〇〇 liars', t_liar_at_most:'There are at most 〇〇 liars',
     t_attr_honest:'The person whose 〇〇 is 〇〇 is honest', t_attr_liar:'The person whose 〇〇 is 〇〇 is a liar',
+    t_culprit_honest:'The culprit is honest', t_culprit_liar:'The culprit is a liar',
     t_culprit_same_attr:"The culprit has the same 〇〇 as 〇〇",
     t_flavor:'Other (no logical effect)',
     liar_unit:'liars', honest_unit:'honest people', parity_even:'even', parity_odd:'odd', consist_ok:'✓ Consistent', consist_bad:'✗ Inconsistent',
@@ -443,6 +445,8 @@ function jaSentence(t, puzzle, speakerIdx){
     case 'honest_count':         return `正直者は${t.count}人だ`;
     case 'attr_is_honest':       return `${t.attrName}が${t.attrValue}な人は正直者だ`;
     case 'attr_is_liar':         return `${t.attrName}が${t.attrValue}な人は嘘つきだ`;
+    case 'culprit_is_honest':    return '犯人は正直者だ';
+    case 'culprit_is_liar':      return '犯人は嘘つきだ';
     case 'culprit_same_attr':    return `犯人は${self?puzzle.suspects[speakerIdx]?.firstPerson??'私':callOf(t.suspectIdx)}と同じ${t.attrName}だ`;
     case 'flavor':               return t.text ?? '';
     default: return '（不明）';
@@ -468,6 +472,8 @@ function enSentence(t, puzzle, speakerIdx){
     case 'honest_count':         { const h=t.count??1; return `There ${h===1?'is':'are'} ${h} honest person${h===1?'':'s'}`; }
     case 'attr_is_honest':       return `The person whose ${t.attrName} is ${t.attrValue} is honest`;
     case 'attr_is_liar':         return `The person whose ${t.attrName} is ${t.attrValue} is a liar`;
+    case 'culprit_is_honest':    return 'The culprit is honest';
+    case 'culprit_is_liar':      return 'The culprit is a liar';
     case 'culprit_same_attr':    return `The culprit has the same ${t.attrName} as ${self?'me':n}`;
     case 'flavor':               return t.text ?? '';
     default: return '(unknown)';
@@ -496,6 +502,8 @@ function evaluate(t, cIdx, liarSet, puzzle){
     case 'honest_count':      return (suspects.length - liarSet.size) === t.count;
     case 'attr_is_honest':    { const idxs=suspects.map((s,i)=>s.attrs[t.attrName]===t.attrValue?i:-1).filter(i=>i!==-1); if(!idxs.length) return null; return idxs.every(i=>!liarSet.has(i)); }
     case 'attr_is_liar':      { const idxs=suspects.map((s,i)=>s.attrs[t.attrName]===t.attrValue?i:-1).filter(i=>i!==-1); if(!idxs.length) return null; return idxs.every(i=>liarSet.has(i)); }
+    case 'culprit_is_honest': return !liarSet.has(cIdx);
+    case 'culprit_is_liar':   return liarSet.has(cIdx);
     default: return null;
   }
 }
@@ -907,6 +915,8 @@ function renderStep3(){
     <option value="honest_count" ${t?.type==='honest_count'?'selected':''}>${L('t_honest_count')}</option>
     <option value="attr_is_honest" ${t?.type==='attr_is_honest'?'selected':''} ${!attributes.length?'disabled':''}>${L('t_attr_honest')}</option>
     <option value="attr_is_liar" ${t?.type==='attr_is_liar'?'selected':''} ${!attributes.length?'disabled':''}>${L('t_attr_liar')}</option>
+    <option value="culprit_is_honest" ${t?.type==='culprit_is_honest'?'selected':''}>${L('t_culprit_honest')}</option>
+    <option value="culprit_is_liar" ${t?.type==='culprit_is_liar'?'selected':''}>${L('t_culprit_liar')}</option>
     <option value="culprit_same_attr" ${t?.type==='culprit_same_attr'?'selected':''} ${!attributes.length?'disabled':''}>${L('t_culprit_same_attr')}</option>
     <option value="flavor" ${t?.type==='flavor'?'selected':''}>${L('t_flavor')}</option>
   </select>`;
