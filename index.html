@@ -575,7 +575,41 @@ function updSName(idx,v){ state.puzzle.suspects[idx].name=v; }
 function updSCallNameFor(speakerIdx,targetIdx,v){ const s=state.puzzle.suspects[speakerIdx]; s.callNames=s.callNames??{}; s.callNames[targetIdx]=v; render(); }
 function updSFP(idx,v){ state.puzzle.suspects[idx].firstPerson=v; if(!v.trim()&&state.puzzle.suspects[idx].testimony?.type!=='flavor') state.puzzle.suspects[idx].testimony=null; render(); }
 function updSAttr(si,an,v){ state.puzzle.suspects[si].attrs[an]=v; }
-function addAttr(){ const name=prompt(state.lang==='ja'?'属性名（例：職業）:':'Trait name (e.g. Job):'); if(!name?.trim()) return; const vs=prompt(state.lang==='ja'?'値をカンマ区切りで（例：医者,弁護士）:':'Values, comma-separated (e.g. Doctor,Lawyer):'); if(!vs?.trim()) return; const values=vs.split(',').map(v=>v.trim()).filter(Boolean); if(!values.length) return; const attr={name:name.trim(),values}; state.puzzle.attributes.push(attr); state.puzzle.suspects.forEach(s=>{s.attrs[attr.name]=attr.values[0];(s.hiddenAttrs=s.hiddenAttrs??{})[attr.name]=false;}); render(); }
+function addAttr(){
+  const ov=document.createElement('div'); ov.className='modal-overlay';
+  const isJa=state.lang==='ja';
+  ov.innerHTML=`<div class="modal" style="text-align:left;max-width:360px">
+    <h2 style="font-family:'Cinzel',serif;font-size:1.05rem;color:var(--gold);margin-bottom:20px">${isJa?'属性を追加':'Add Trait'}</h2>
+    <div style="margin-bottom:14px">
+      <label style="font-size:.78rem;color:var(--text2);display:block;margin-bottom:6px">${isJa?'属性名（例：職業）':'Trait name (e.g. Job)'}</label>
+      <input id="attr-name-inp" type="text" style="width:100%" placeholder="${isJa?'職業':'Job'}"/>
+    </div>
+    <div style="margin-bottom:22px">
+      <label style="font-size:.78rem;color:var(--text2);display:block;margin-bottom:6px">${isJa?'値をカンマ区切りで（例：医者,弁護士）':'Values, comma-separated (e.g. Doctor,Lawyer)'}</label>
+      <input id="attr-vals-inp" type="text" style="width:100%" placeholder="${isJa?'医者,弁護士,教師':'Doctor,Lawyer,Teacher'}"/>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-gold" style="flex:1" onclick="confirmAddAttr()">${isJa?'追加':'Add'}</button>
+      <button class="btn btn-outline" style="flex:1" onclick="document.querySelector('.modal-overlay').remove()">${L('close_btn')}</button>
+    </div>
+  </div>`;
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+  ov.addEventListener('keydown',e=>{if(e.key==='Enter')confirmAddAttr();});
+  document.body.appendChild(ov);
+  document.getElementById('attr-name-inp')?.focus();
+}
+function confirmAddAttr(){
+  const name=document.getElementById('attr-name-inp')?.value?.trim();
+  const vs=document.getElementById('attr-vals-inp')?.value?.trim();
+  if(!name||!vs) return;
+  const values=vs.split(',').map(v=>v.trim()).filter(Boolean);
+  if(!values.length) return;
+  document.querySelector('.modal-overlay')?.remove();
+  const attr={name,values};
+  state.puzzle.attributes.push(attr);
+  state.puzzle.suspects.forEach(s=>{s.attrs[attr.name]=attr.values[0];(s.hiddenAttrs=s.hiddenAttrs??{})[attr.name]=false;});
+  render();
+}
 function delAttr(an){ state.puzzle.attributes=state.puzzle.attributes.filter(a=>a.name!==an); state.puzzle.suspects.forEach(s=>{delete s.attrs[an];if(s.hiddenAttrs)delete s.hiddenAttrs[an];}); const kill=t=>(t?.attrName===an)?null:t; state.puzzle.suspects.forEach(s=>{s.testimony=kill(s.testimony);}); state.puzzle.externalWitnesses.forEach(ew=>{ew.testimony=kill(ew.testimony);}); render(); }
 function updSAttrVis(si,an){ const s=state.puzzle.suspects[si]; s.hiddenAttrs=s.hiddenAttrs??{}; s.hiddenAttrs[an]=!s.hiddenAttrs[an]; render(); }
 function setCriminal(idx){ state.puzzle.criminalIdx=idx; render(); }
@@ -667,17 +701,38 @@ function sortedPuzzles(){
   else ps.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
   return ps;
 }
-async function publishPuzzle(){
+function publishPuzzle(){
   const existing=state.editingId?(state.onlinePuzzles??[]).find(p=>p.id===state.editingId):null;
-  const title=prompt(state.lang==='ja'?'パズルのタイトルを入力:':'Enter puzzle title:',existing?.title??'');
-  if(!title?.trim()) return;
+  const isJa=state.lang==='ja';
+  const ov=document.createElement('div'); ov.className='modal-overlay';
+  ov.innerHTML=`<div class="modal" style="text-align:left;max-width:360px">
+    <h2 style="font-family:'Cinzel',serif;font-size:1.05rem;color:var(--gold);margin-bottom:20px">${isJa?(existing?'パズルを更新':'パズルを公開'):(existing?'Update Puzzle':'Publish Puzzle')}</h2>
+    <div style="margin-bottom:22px">
+      <label style="font-size:.78rem;color:var(--text2);display:block;margin-bottom:6px">${isJa?'タイトル':'Title'}</label>
+      <input id="pub-title-inp" type="text" style="width:100%" value="${existing?.title??''}"/>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-gold" style="flex:1" onclick="confirmPublish()">${isJa?(existing?L('update_btn'):L('publish_btn')):(existing?L('update_btn'):L('publish_btn'))}</button>
+      <button class="btn btn-outline" style="flex:1" onclick="document.querySelector('.modal-overlay').remove()">${L('close_btn')}</button>
+    </div>
+  </div>`;
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+  ov.addEventListener('keydown',e=>{if(e.key==='Enter')confirmPublish();});
+  document.body.appendChild(ov);
+  document.getElementById('pub-title-inp')?.focus();
+}
+async function confirmPublish(){
+  const title=document.getElementById('pub-title-inp')?.value?.trim();
+  if(!title) return;
+  document.querySelector('.modal-overlay')?.remove();
+  const existing=state.editingId?(state.onlinePuzzles??[]).find(p=>p.id===state.editingId):null;
   const puzzle_data=encPuzzle(state.puzzle); if(!puzzle_data) return;
   try{
     if(existing){
-      await fetch(`${SUPABASE_URL}/rest/v1/puzzles?id=eq.${state.editingId}`,{method:'PATCH',headers:sbH(),body:JSON.stringify({title:title.trim(),puzzle_data})});
+      await fetch(`${SUPABASE_URL}/rest/v1/puzzles?id=eq.${state.editingId}`,{method:'PATCH',headers:sbH(),body:JSON.stringify({title,puzzle_data})});
       alert(L('publish_update_ok'));
     } else {
-      await fetch(`${SUPABASE_URL}/rest/v1/puzzles`,{method:'POST',headers:{...sbH(),'Prefer':'return=minimal'},body:JSON.stringify({title:title.trim(),puzzle_data})});
+      await fetch(`${SUPABASE_URL}/rest/v1/puzzles`,{method:'POST',headers:{...sbH(),'Prefer':'return=minimal'},body:JSON.stringify({title,puzzle_data})});
       alert(L('publish_ok'));
     }
     state.editingId=null; goHome();
