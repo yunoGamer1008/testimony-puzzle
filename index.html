@@ -573,7 +573,7 @@ function delSuspect(idx){
 function updCaseName(v){ state.puzzle.caseName=v; }
 function updSName(idx,v){ state.puzzle.suspects[idx].name=v; }
 function updSCallNameFor(speakerIdx,targetIdx,v){ const s=state.puzzle.suspects[speakerIdx]; s.callNames=s.callNames??{}; s.callNames[targetIdx]=v; render(); }
-function updSFP(idx,v){ state.puzzle.suspects[idx].firstPerson=v; }
+function updSFP(idx,v){ state.puzzle.suspects[idx].firstPerson=v; if(!v.trim()&&state.puzzle.suspects[idx].testimony?.type!=='flavor') state.puzzle.suspects[idx].testimony=null; render(); }
 function updSAttr(si,an,v){ state.puzzle.suspects[si].attrs[an]=v; }
 function addAttr(){ const name=prompt(state.lang==='ja'?'属性名（例：職業）:':'Trait name (e.g. Job):'); if(!name?.trim()) return; const vs=prompt(state.lang==='ja'?'値をカンマ区切りで（例：医者,弁護士）:':'Values, comma-separated (e.g. Doctor,Lawyer):'); if(!vs?.trim()) return; const values=vs.split(',').map(v=>v.trim()).filter(Boolean); if(!values.length) return; const attr={name:name.trim(),values}; state.puzzle.attributes.push(attr); state.puzzle.suspects.forEach(s=>{s.attrs[attr.name]=attr.values[0];(s.hiddenAttrs=s.hiddenAttrs??{})[attr.name]=false;}); render(); }
 function delAttr(an){ state.puzzle.attributes=state.puzzle.attributes.filter(a=>a.name!==an); state.puzzle.suspects.forEach(s=>{delete s.attrs[an];if(s.hiddenAttrs)delete s.hiddenAttrs[an];}); const kill=t=>(t?.attrName===an)?null:t; state.puzzle.suspects.forEach(s=>{s.testimony=kill(s.testimony);}); state.puzzle.externalWitnesses.forEach(ew=>{ew.testimony=kill(ew.testimony);}); render(); }
@@ -900,24 +900,24 @@ function renderStep2(){
 
 function renderStep3(){
   const {suspects,attributes,criminalIdx,externalWitnesses}=state.puzzle;
-  const tSelect=(onc,t)=>`<select onchange="${onc}">
+  const tSelect=(onc,t,fpEmpty=false)=>`<select onchange="${onc}">
     <option value="">${L('select_type')}</option>
-    <option value="suspect_is_criminal" ${t?.type==='suspect_is_criminal'?'selected':''}>${L('t_is_crim')}</option>
-    <option value="suspect_not_criminal" ${t?.type==='suspect_not_criminal'?'selected':''}>${L('t_not_crim')}</option>
-    <option value="criminal_has_attr" ${t?.type==='criminal_has_attr'?'selected':''} ${!attributes.length?'disabled':''}>${L('t_crim_attr')}</option>
-    <option value="suspect_has_attr" ${t?.type==='suspect_has_attr'?'selected':''} ${!attributes.length?'disabled':''}>${L('t_sus_attr')}</option>
-    <option value="suspect_is_honest" ${t?.type==='suspect_is_honest'?'selected':''}>${L('t_is_honest')}</option>
-    <option value="suspect_is_liar" ${t?.type==='suspect_is_liar'?'selected':''}>${L('t_is_liar')}</option>
-    <option value="liar_count" ${t?.type==='liar_count'?'selected':''}>${L('t_count')}</option>
-    <option value="liar_parity" ${t?.type==='liar_parity'?'selected':''}>${L('t_liar_parity')}</option>
-    <option value="liar_at_least" ${t?.type==='liar_at_least'?'selected':''}>${L('t_liar_at_least')}</option>
-    <option value="liar_at_most" ${t?.type==='liar_at_most'?'selected':''}>${L('t_liar_at_most')}</option>
-    <option value="honest_count" ${t?.type==='honest_count'?'selected':''}>${L('t_honest_count')}</option>
-    <option value="attr_is_honest" ${t?.type==='attr_is_honest'?'selected':''} ${!attributes.length?'disabled':''}>${L('t_attr_honest')}</option>
-    <option value="attr_is_liar" ${t?.type==='attr_is_liar'?'selected':''} ${!attributes.length?'disabled':''}>${L('t_attr_liar')}</option>
-    <option value="culprit_is_honest" ${t?.type==='culprit_is_honest'?'selected':''}>${L('t_culprit_honest')}</option>
-    <option value="culprit_is_liar" ${t?.type==='culprit_is_liar'?'selected':''}>${L('t_culprit_liar')}</option>
-    <option value="culprit_same_attr" ${t?.type==='culprit_same_attr'?'selected':''} ${!attributes.length?'disabled':''}>${L('t_culprit_same_attr')}</option>
+    <option value="suspect_is_criminal" ${t?.type==='suspect_is_criminal'?'selected':''} ${fpEmpty?'disabled':''}>${L('t_is_crim')}</option>
+    <option value="suspect_not_criminal" ${t?.type==='suspect_not_criminal'?'selected':''} ${fpEmpty?'disabled':''}>${L('t_not_crim')}</option>
+    <option value="criminal_has_attr" ${t?.type==='criminal_has_attr'?'selected':''} ${(!attributes.length||fpEmpty)?'disabled':''}>${L('t_crim_attr')}</option>
+    <option value="suspect_has_attr" ${t?.type==='suspect_has_attr'?'selected':''} ${(!attributes.length||fpEmpty)?'disabled':''}>${L('t_sus_attr')}</option>
+    <option value="suspect_is_honest" ${t?.type==='suspect_is_honest'?'selected':''} ${fpEmpty?'disabled':''}>${L('t_is_honest')}</option>
+    <option value="suspect_is_liar" ${t?.type==='suspect_is_liar'?'selected':''} ${fpEmpty?'disabled':''}>${L('t_is_liar')}</option>
+    <option value="liar_count" ${t?.type==='liar_count'?'selected':''} ${fpEmpty?'disabled':''}>${L('t_count')}</option>
+    <option value="liar_parity" ${t?.type==='liar_parity'?'selected':''} ${fpEmpty?'disabled':''}>${L('t_liar_parity')}</option>
+    <option value="liar_at_least" ${t?.type==='liar_at_least'?'selected':''} ${fpEmpty?'disabled':''}>${L('t_liar_at_least')}</option>
+    <option value="liar_at_most" ${t?.type==='liar_at_most'?'selected':''} ${fpEmpty?'disabled':''}>${L('t_liar_at_most')}</option>
+    <option value="honest_count" ${t?.type==='honest_count'?'selected':''} ${fpEmpty?'disabled':''}>${L('t_honest_count')}</option>
+    <option value="attr_is_honest" ${t?.type==='attr_is_honest'?'selected':''} ${(!attributes.length||fpEmpty)?'disabled':''}>${L('t_attr_honest')}</option>
+    <option value="attr_is_liar" ${t?.type==='attr_is_liar'?'selected':''} ${(!attributes.length||fpEmpty)?'disabled':''}>${L('t_attr_liar')}</option>
+    <option value="culprit_is_honest" ${t?.type==='culprit_is_honest'?'selected':''} ${fpEmpty?'disabled':''}>${L('t_culprit_honest')}</option>
+    <option value="culprit_is_liar" ${t?.type==='culprit_is_liar'?'selected':''} ${fpEmpty?'disabled':''}>${L('t_culprit_liar')}</option>
+    <option value="culprit_same_attr" ${t?.type==='culprit_same_attr'?'selected':''} ${(!attributes.length||fpEmpty)?'disabled':''}>${L('t_culprit_same_attr')}</option>
     <option value="flavor" ${t?.type==='flavor'?'selected':''}>${L('t_flavor')}</option>
   </select>`;
 
@@ -947,6 +947,7 @@ function renderStep3(){
 
   const suspCards=suspects.map((s,i)=>{
     const isCrim=i===criminalIdx; const t=s.testimony;
+    const fpEmpty=state.lang==='ja'&&!s.firstPerson?.trim();
     const isFlavor=t?.type==='flavor';
     const cs=isFlavor?null:consistencyStatus(t,i,state.puzzle);
     const badge=`${isCrim?`<span class="badge badge-criminal">${L('criminal_badge')}</span> `:''}<div class="toggle"><button class="tgl honest ${!s.isLiar?'on':''}" onclick="setSLiar(${i},false)">${L('honest_btn')}</button><button class="tgl liar ${s.isLiar?'on':''}" onclick="setSLiar(${i},true)">${L('liar_btn')}</button></div>`;
@@ -958,7 +959,7 @@ function renderStep3(){
     const callnamesSection=suspects.length>1?`<div class="callnames-row"><span class="callnames-label">${L('callnames_label')}</span>${suspects.map((other,j)=>j===i?'':`<label class="callname-item">${H(other.name)}<input type="text" value="${H((s.callNames??{})[j]??'')}" placeholder="${H(other.name)}" onchange="updSCallNameFor(${i},${j},this.value)" style="width:72px"/></label>`).join('')}</div>`:''
     return `<div class="t-card ${isCrim?'criminal':''}${isFlavor?' flavor':''}">
       <div class="t-header"><span style="font-weight:600;font-size:.95rem">${H(s.name)}</span>${badge}</div>
-      <div class="t-row">${tSelect(`updSTType(${i},this.value)`,t)}${t?tParams(t,`updSTParam(${i},`):''}</div>
+      <div class="t-row">${tSelect(`updSTType(${i},this.value)`,t,fpEmpty)}${t?tParams(t,`updSTParam(${i},`):''}</div>
       ${preview}${callnamesSection}</div>`;
   }).join('');
 
